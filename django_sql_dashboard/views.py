@@ -65,13 +65,6 @@ def dashboard(request):
                                 "duration_ms": duration_ms,
                             }
                         )
-                        for column in cursor.description:
-                            print(
-                                column.name,
-                                column.table_column,
-                                column.table_oid,
-                                column.type_code,
-                            )
     return render(
         request,
         "django_sql_dashboard/dashboard.html",

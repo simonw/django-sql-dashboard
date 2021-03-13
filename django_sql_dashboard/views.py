@@ -74,7 +74,7 @@ def dashboard(request):
                             )
     return render(
         request,
-        "django_sql_dashboard.html",
+        "django_sql_dashboard/dashboard.html",
         {"query_results": query_results, "available_tables": available_tables},
     )
 

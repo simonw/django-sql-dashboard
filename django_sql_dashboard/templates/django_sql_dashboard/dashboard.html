@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Django SQL Dashboard</title>
+    <style>
+      main {
+        margin-top: 1em;
+        font-family: Helvetica, sans-serif;
+      }
+      main img {
+        height: 2em;
+      }
+      table {
+        margin-top: 1em;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+      th {
+        white-space: nowrap;
+        text-align: left;
+        padding: 4px;
+        padding-right: 1em;
+        border-right: 1px solid #eee;
+      }
+      td {
+        border-top: 1px solid #aaa;
+        border-right: 1px solid #eee;
+        padding: 4px;
+        vertical-align: top;
+        white-space: pre-wrap;
+      }
+      span.null {
+        color: #aaa;
+        font-weight: bold;
+      }
+      input.btn {
+        font-weight: 400;
+        cursor: pointer;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #666;
+        padding: 0.5em 0.8em;
+        font-size: 0.9rem;
+        line-height: 1;
+        border-radius: 0.25rem;
+      }
+      .query-results {
+          border: 1px solid #666;
+          border-right: none;
+          margin: 1em 0;
+          padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Django SQL Dashboard</h1>
+      <p>{% for table in available_tables %}<a href="?sql=select+count(*)+from+{{ table|urlencode }}&sql=select+*+from+{{ table|urlencode }}">{{ table }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      <form action="" method="GET">
+        {% for result in query_results %}
+        <div class="query-results">
+          <textarea
+            style="
+              width: 95%;
+              height: 4em;
+              border: 2px solid #666;
+              padding: 0.5em;
+            "
+            name="sql"
+          >{{ result.sql|default:"" }}</textarea>
+          <p>
+            <input
+              class="btn"
+              type="submit"
+              value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+            />
+          </p>
+          {% if result.truncated %}Results were truncated{% endif %}
+          {% if result.error %}
+          <p style="background-color: pink; padding: 1em; margin: 1em 0">
+            {{ result.error }}
+          </p>
+          {% endif %}
+          <table>
+            <thead>
+              <tr>
+                {% for column in result.description %}
+                <th alt="{{ column }}">{{ column.name }} [<a href="?sql=select%20%22{{ column.name }}%22%2C%20count(*)%20as%20n%20from%20({{ result.sql|urlencode }})%20as%20results%20group%20by%22{{ column.name }}%22%20order%20by%20n%20desc">count</a>]</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in result.rows %}
+              <tr>
+                {% for item in row %}
+                <td>{% if item is None %}<span class="null">- null -</span>{% else %}{{ item }}{% endif %}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
+        </div>
+        {% endfor %}
+
+        <p>Add another query:</p>
+
+        <textarea
+          style="
+            width: 60%;
+            height: 10em;
+            border: 2px solid #666;
+            padding: 0.5em;
+          "
+          name="sql"
+        ></textarea>
+
+        <p>
+          <input
+            class="btn"
+            type="submit"
+            value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+          />
+        </p>
+      </form>
+    </main>
+  </body>
+</html>

@@ -6,6 +6,12 @@
 
 Django app for building dashboards using raw SQL queries
 
+Brings a useful subset of [Datasette](https://datasette.io/) to Django.
+
+Currently only works with PostgreSQL.
+
+This is **very early alpha**. You should not yet trust this code, especially with regards to security. Do not run this in production (yet)!
+
 ## Installation
 
 Install this library using `pip`:
@@ -14,7 +20,21 @@ Install this library using `pip`:
 
 ## Usage
 
-Usage instructions go here.
+Add `"django_sql_dashboard"` to your `INSTALLED_APPS`.
+
+Add the following to your `urls.py`:
+
+```python
+from django.urls import path
+from django_sql_dashboard.views import dashboard
+
+urlpatterns = [
+    path("dashboard", dashboard),
+    # ...
+]
+```
+
+Now visit `/dashboard` as a staff user to start trying out the dashboard.
 
 ## Development
 

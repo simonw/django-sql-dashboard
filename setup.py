@@ -28,6 +28,12 @@ setup(
     license="Apache License, Version 2.0",
     version=VERSION,
     packages=["django_sql_dashboard"],
+    package_data={
+        "django_sql_dashboard": [
+            "templates/django_sql_dashboard/*.html",
+            "migrations/*.py",
+        ]
+    },
     install_requires=["Django"],
     extras_require={
         "test": [

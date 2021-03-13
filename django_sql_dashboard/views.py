@@ -1,12 +1,12 @@
 import json
 import time
 
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import permission_required
 from django.db import connection, transaction
 from django.shortcuts import render
 
 
-@staff_member_required
+@permission_required("django_sql_dashboard.execute_sql")
 def dashboard(request):
     sql_queries = [q for q in request.GET.getlist("sql") if q.strip()]
     query_results = []

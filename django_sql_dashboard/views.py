@@ -3,12 +3,20 @@ import time
 
 from django.contrib.auth.decorators import permission_required
 from django.db import connection, transaction
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+
+from .models import Dashboard
 
 
 @permission_required("django_sql_dashboard.execute_sql")
-def dashboard(request):
+def dashboard_index(request):
     sql_queries = [q for q in request.GET.getlist("sql") if q.strip()]
+    return _dashboard_index(request, sql_queries, title="Django SQL Dashboard")
+
+
+def _dashboard_index(
+    request, sql_queries, title=None, description=None, saved_dashboard=False
+):
     query_results = []
     with connection.cursor() as tables_cursor:
         tables_cursor.execute(
@@ -68,7 +76,27 @@ def dashboard(request):
     return render(
         request,
         "django_sql_dashboard/dashboard.html",
-        {"query_results": query_results, "available_tables": available_tables},
+        {
+            "query_results": query_results,
+            "available_tables": available_tables,
+            "title": title,
+            "description": description,
+            "saved_dashboard": saved_dashboard,
+            "user_can_execute_sql": request.user.has_perm(
+                "django_sql_dashboard.execute_sql"
+            ),
+        },
+    )
+
+
+def dashboard(request, slug):
+    dashboard = get_object_or_404(Dashboard, slug=slug)
+    return _dashboard_index(
+        request,
+        sql_queries=[query.sql for query in dashboard.queries.all()],
+        title=dashboard.title,
+        description=dashboard.description,
+        saved_dashboard=True,
     )
 
 

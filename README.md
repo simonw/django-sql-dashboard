@@ -26,10 +26,11 @@ Add the following to your `urls.py`:
 
 ```python
 from django.urls import path
-from django_sql_dashboard.views import dashboard
+from django_sql_dashboard.views import dashboard, dashboard_index
 
 urlpatterns = [
-    path("dashboard", dashboard),
+    path("dashboard/", dashboard_index, name="django_sql_dashboard-index"),
+    path("dashboard/<slug>/", dashboard),
     # ...
 ]
 ```

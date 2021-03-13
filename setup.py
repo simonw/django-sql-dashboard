@@ -1,5 +1,6 @@
-from setuptools import setup
 import os
+
+from setuptools import setup
 
 VERSION = "0.1"
 
@@ -28,7 +29,15 @@ setup(
     version=VERSION,
     packages=["django_sql_dashboard"],
     install_requires=["Django"],
-    extras_require={"test": ["pytest", "pytest-django", "pytest-pythonpath"]},
+    extras_require={
+        "test": [
+            "pytest",
+            "pytest-django",
+            "pytest-pythonpath",
+            "dj-database-url",
+            "testing.postgresql",
+        ]
+    },
     tests_require=["django-sql-dashboard[test]"],
     python_requires=">=3.6",
 )

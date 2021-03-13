@@ -28,9 +28,10 @@ setup(
     license="Apache License, Version 2.0",
     version=VERSION,
     packages=["django_sql_dashboard"],
-    install_requires=["Django", "psycopg2"],
+    install_requires=["Django"],
     extras_require={
         "test": [
+            "psycopg2",
             "pytest",
             "pytest-django",
             "pytest-pythonpath",

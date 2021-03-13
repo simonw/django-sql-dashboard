@@ -1,7 +1,7 @@
 # django-sql-dashboard
 
 [![PyPI](https://img.shields.io/pypi/v/django-sql-dashboard.svg)](https://pypi.org/project/django-sql-dashboard/)
-[![Changelog](https://img.shields.io/github/v/release/simonw/django-sql-dashboard?label=changelog)](https://github.com/simonw/django-sql-dashboard/releases)
+[![Changelog](https://img.shields.io/github/v/release/simonw/django-sql-dashboard?label=changelog&include_prereleases)](https://github.com/simonw/django-sql-dashboard/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/django-sql-dashboard/blob/main/LICENSE)
 
 Django app for building dashboards using raw SQL queries

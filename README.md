@@ -37,6 +37,10 @@ urlpatterns = [
 
 Now visit `/dashboard` as a staff user to start trying out the dashboard.
 
+## Screenshot
+
+![Django_SQL_Dashboard screenshot](https://user-images.githubusercontent.com/9599/111020900-da352a00-837d-11eb-8991-73ec6e6608ef.png)
+
 ## Development
 
 To contribute to this library, first checkout the code. Then create a new virtual environment:

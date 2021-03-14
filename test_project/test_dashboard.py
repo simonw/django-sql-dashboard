@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth.models import Permission
-
 from django_sql_dashboard.models import Dashboard
 
 
@@ -52,4 +51,5 @@ def test_dashboard(client, admin_client):
     # The admin user should get >count< links, but anon should not
     assert b">count<" not in response.content
     admin_response = admin_client.get("/dashboard/test/")
+    assert admin_response.status_code == 200
     assert b">count<" in admin_response.content

@@ -1,12 +1,13 @@
-import json
 import time
 
 from django.contrib.auth.decorators import permission_required
-from django.db import connections, transaction
+from django.db import connections
+from django.db.utils import ProgrammingError
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 
 from .models import Dashboard
+from .utils import displayable_rows, extract_named_parameters
 
 
 @permission_required("django_sql_dashboard.execute_sql")
@@ -31,6 +32,18 @@ def _dashboard_index(
         """
         )
         available_tables = [t[0] for t in tables_cursor.fetchall()]
+
+    parameters = []
+    for sql in sql_queries:
+        for p in extract_named_parameters(sql):
+            if p not in parameters:
+                parameters.append(p)
+    parameter_values = {
+        parameter: request.GET.get(parameter, "")
+        for parameter in parameters
+        if parameter != "sql"
+    }
+
     if sql_queries:
         for sql in sql_queries:
             sql = sql.strip()
@@ -45,37 +58,42 @@ def _dashboard_index(
                     }
                 )
                 continue
-            with transaction.atomic():
-                with connection.cursor() as cursor:
-                    duration_ms = None
+            with connection.cursor() as cursor:
+                duration_ms = None
+                try:
+                    cursor.execute("BEGIN;")
+                    start = time.perf_counter()
+                    # Running a SELECT prevents future SET TRANSACTION READ WRITE:
+                    cursor.execute("SELECT 1;", parameter_values)
+                    cursor.fetchall()
+                    cursor.execute(sql, parameter_values)
                     try:
-                        start = time.perf_counter()
-                        cursor.execute("SET TRANSACTION READ ONLY;")
-                        # Running a SELECT prevents future SET TRANSACTION READ WRITE:
-                        cursor.execute("SELECT 1;")
-                        cursor.execute(sql)
                         rows = list(cursor.fetchmany(101))
-                        duration_ms = (time.perf_counter() - start) * 1000.0
-                    except Exception as e:
-                        query_results.append(
-                            {
-                                "sql": sql,
-                                "rows": [],
-                                "description": [],
-                                "truncated": False,
-                                "error": str(e),
-                            }
-                        )
-                    else:
-                        query_results.append(
-                            {
-                                "sql": sql,
-                                "rows": displayable_rows(rows[:100]),
-                                "description": cursor.description,
-                                "truncated": len(rows) == 101,
-                                "duration_ms": duration_ms,
-                            }
-                        )
+                    except ProgrammingError as e:
+                        rows = [{"statusmessage": str(cursor.statusmessage)}]
+                    duration_ms = (time.perf_counter() - start) * 1000.0
+                except Exception as e:
+                    query_results.append(
+                        {
+                            "sql": sql,
+                            "rows": [],
+                            "description": [],
+                            "truncated": False,
+                            "error": str(e),
+                        }
+                    )
+                else:
+                    query_results.append(
+                        {
+                            "sql": sql,
+                            "rows": displayable_rows(rows[:100]),
+                            "description": cursor.description,
+                            "truncated": len(rows) == 101,
+                            "duration_ms": duration_ms,
+                        }
+                    )
+                finally:
+                    cursor.execute("ROLLBACK;")
     return render(
         request,
         "django_sql_dashboard/dashboard.html",
@@ -88,6 +106,7 @@ def _dashboard_index(
             "user_can_execute_sql": request.user.has_perm(
                 "django_sql_dashboard.execute_sql"
             ),
+            "parameter_values": parameter_values.items(),
         },
     )
 
@@ -101,15 +120,3 @@ def dashboard(request, slug):
         description=dashboard.description,
         saved_dashboard=True,
     )
-
-
-def displayable_rows(rows):
-    fixed = []
-    for row in rows:
-        fixed_row = []
-        for cell in row:
-            if isinstance(cell, (dict, list)):
-                cell = json.dumps(cell)
-            fixed_row.append(cell)
-        fixed.append(fixed_row)
-    return fixed

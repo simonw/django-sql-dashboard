@@ -62,6 +62,24 @@
       .pre-results textarea {
         height: 4em;
       }
+      div.query-parameters {
+        width: 80%;
+        display: grid;
+        grid-template-columns: min-content auto;
+        grid-gap: 0.5em;
+        align-items: center;
+        margin-bottom: 1em;
+      }
+      div.query-parameters input[type="text"] {
+        border: 1px solid #666;
+        padding: 0.5em;
+      }
+      div.query-parameters label {
+        text-align: right;
+        font-weight: bold;
+        display: inline-block;
+        padding-right: 2em;
+      }
     </style>
   </head>
   <body>
@@ -73,6 +91,20 @@
         <p>{{ description }}</p>
       {% endif %}
       <form action="" method="GET">
+        {% if parameter_values %}
+          <h3>Query parameters</h3>
+          <div class="query-parameters">
+          {% for name, value in parameter_values %}
+              <label for="qp{{ forloop.counter }}">{{ name }}</label>
+              <input type="text" id="qp{{ forloop.counter }}" name="{{ name }}" value="{{ value }}">
+          {% endfor %}
+          </div>
+          <input
+            class="btn"
+            type="submit"
+            value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+          />
+        {% endif %}
         {% for result in query_results %}
         <div class="query-results">
           {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea

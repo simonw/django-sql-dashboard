@@ -29,17 +29,16 @@ Add `"django_sql_dashboard"` to your `INSTALLED_APPS`.
 Add the following to your `urls.py`:
 
 ```python
-from django.urls import path
-from django_sql_dashboard.views import dashboard, dashboard_index
+from django.urls import path, inclued
+import django_sql_dashboard
 
 urlpatterns = [
-    path("dashboard/", dashboard_index, name="django_sql_dashboard-index"),
-    path("dashboard/<slug>/", dashboard),
     # ...
+    path("dashboard/", include(django_sql_dashboard.urls)),
 ]
 ```
 
-Now visit `/dashboard` as a staff user to start trying out the dashboard.
+Now visit `/dashboard/` as a staff user to start trying out the dashboard.
 
 ### SQL parameters
 

@@ -9,13 +9,13 @@ def test_anonymous_users_denied(client):
     assert response.url == "/accounts/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
 
 
-def test_superusers_allowed(admin_client):
+def test_superusers_allowed(admin_client, dashboard_db):
     response = admin_client.get("/dashboard/")
     assert response.status_code == 200
     assert b"<title>Django SQL Dashboard</title>" in response.content
 
 
-def test_must_have_execute_sql_permission(client, django_user_model):
+def test_must_have_execute_sql_permission(client, django_user_model, dashboard_db):
     execute_sql = Permission.objects.get(
         content_type__app_label="django_sql_dashboard",
         content_type__model="dashboard",
@@ -39,7 +39,7 @@ def test_must_have_execute_sql_permission(client, django_user_model):
 
 
 @pytest.mark.django_db
-def test_dashboard(client, admin_client):
+def test_dashboard(client, admin_client, dashboard_db):
     assert client.get("/dashboard/test/").status_code == 404
     dashboard = Dashboard.objects.create(slug="test")
     dashboard.queries.create(sql="select 11 + 33")

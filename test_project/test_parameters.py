@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 from django_sql_dashboard.models import Dashboard
 
 
-def test_parameter_form(admin_client):
+def test_parameter_form(admin_client, dashboard_db):
     response = admin_client.get(
         "/dashboard/?"
         + urlencode(
@@ -30,7 +30,7 @@ def test_parameter_form(admin_client):
         assert fragment in html
 
 
-def test_parameters_applied(admin_client):
+def test_parameters_applied(admin_client, dashboard_db):
     response = admin_client.get(
         "/dashboard/?"
         + urlencode(

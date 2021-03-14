@@ -2,8 +2,9 @@ import json
 import time
 
 from django.contrib.auth.decorators import permission_required
-from django.db import connection, transaction
+from django.db import connections, transaction
 from django.shortcuts import get_object_or_404, render
+from django.conf import settings
 
 from .models import Dashboard
 
@@ -18,6 +19,8 @@ def _dashboard_index(
     request, sql_queries, title=None, description=None, saved_dashboard=False
 ):
     query_results = []
+    alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
+    connection = connections[alias]
     with connection.cursor() as tables_cursor:
         tables_cursor.execute(
             """

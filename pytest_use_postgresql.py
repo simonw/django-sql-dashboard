@@ -12,6 +12,7 @@ _POSTGRESQL = Postgresql()
 def pytest_load_initial_conftests(early_config, parser, args):
     os.environ["DJANGO_SETTINGS_MODULE"] = early_config.getini("DJANGO_SETTINGS_MODULE")
     settings.DATABASES["default"] = parse(_POSTGRESQL.url())
+    settings.DATABASES["dashboard"] = parse(_POSTGRESQL.url())
 
 
 def pytest_unconfigure(config):

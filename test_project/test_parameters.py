@@ -1,6 +1,8 @@
 import pytest
 from urllib.parse import urlencode
+from django.core import signing
 from django_sql_dashboard.models import Dashboard
+from django_sql_dashboard.utils import SQL_SALT
 
 
 def test_parameter_form(admin_client, dashboard_db):
@@ -8,10 +10,12 @@ def test_parameter_form(admin_client, dashboard_db):
         "/dashboard/?"
         + urlencode(
             {
-                "sql": [
-                    "select %(foo)s as foo, %(bar)s as bar",
-                    "select select %(foo)s as foo, select %(baz)s as baz",
-                ]
+                "sql": signed_sql(
+                    [
+                        "select %(foo)s as foo, %(bar)s as bar",
+                        "select select %(foo)s as foo, select %(baz)s as baz",
+                    ]
+                )
             },
             doseq=True,
         )
@@ -35,10 +39,12 @@ def test_parameters_applied(admin_client, dashboard_db):
         "/dashboard/?"
         + urlencode(
             {
-                "sql": [
-                    "select %(foo)s || '!' as exclaim",
-                    "select %(foo)s || '! ' || %(bar)s || '!!' as double_exclaim",
-                ],
+                "sql": signed_sql(
+                    [
+                        "select %(foo)s || '!' as exclaim",
+                        "select %(foo)s || '! ' || %(bar)s || '!!' as double_exclaim",
+                    ]
+                ),
                 "foo": "FOO",
                 "bar": "BAR",
             },
@@ -49,3 +55,7 @@ def test_parameters_applied(admin_client, dashboard_db):
     html = response.content.decode("utf-8")
     assert "<td>FOO!</td>" in html
     assert "<td>FOO! BAR!!</td>" in html
+
+
+def signed_sql(queries):
+    return [signing.dumps(sql, salt=SQL_SALT) for sql in queries]

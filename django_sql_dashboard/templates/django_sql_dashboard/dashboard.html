@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% load django_sql_dashboard %}<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -86,11 +86,12 @@
     <main>
       <h1>{{ title }}</h1>
       {% if not saved_dashboard %}
-        <p>{% for table in available_tables %}<a href="?sql=select+count(*)+from+{{ table|urlencode }}&sql=select+*+from+{{ table|urlencode }}">{{ table }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        <p>{% for table in available_tables %}<a href="?sql={% filter sign_sql %}select count(*) from {{ table }}{% endfilter %}&sql={% filter sign_sql %}select * from {{ table }}{% endfilter %}">{{ table }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
       {% else %}
         <p>{{ description }}</p>
       {% endif %}
-      <form action="" method="GET">
+      <form action="" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
+        {% if not saved_dashboard %}{% csrf_token %}{% endif %}
         {% if parameter_values %}
           <h3>Query parameters</h3>
           <div class="query-parameters">
@@ -127,7 +128,7 @@
             <thead>
               <tr>
                 {% for column in result.description %}
-                <th alt="{{ column }}">{{ column.name }}{% if user_can_execute_sql %} [<a href="{% url 'django_sql_dashboard-index' %}?sql=select%20%22{{ column.name }}%22%2C%20count(*)%20as%20n%20from%20({{ result.sql|urlencode }})%20as%20results%20group%20by%22{{ column.name }}%22%20order%20by%20n%20desc">count</a>]{% endif %}</th>
+                <th alt="{{ column }}">{{ column.name }}{% if user_can_execute_sql %} [<a href="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql %}select "{{ column.name }}", count(*) as n from ({{ result.sql }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}">count</a>]{% endif %}</th>
                 {% endfor %}
               </tr>
             </thead>

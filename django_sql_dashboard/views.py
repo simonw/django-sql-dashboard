@@ -1,18 +1,43 @@
 import time
 
 from django.contrib.auth.decorators import permission_required
+from django.core import signing
 from django.db import connections
 from django.db.utils import ProgrammingError
+from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 
+from urllib.parse import urlencode
+
 from .models import Dashboard
-from .utils import displayable_rows, extract_named_parameters
+from .utils import displayable_rows, extract_named_parameters, SQL_SALT
 
 
 @permission_required("django_sql_dashboard.execute_sql")
 def dashboard_index(request):
-    sql_queries = [q for q in request.GET.getlist("sql") if q.strip()]
+    if request.method == "POST":
+        # Convert ?sql= into signed values and redirect as GET
+        sqls = request.POST.getlist("sql")
+        other_pairs = [
+            (key, value)
+            for key, value in request.POST.items()
+            if key not in ("sql", "csrfmiddlewaretoken")
+        ]
+        signed_sqls = [
+            signing.dumps(query, salt=SQL_SALT) for query in sqls if query.strip()
+        ]
+        params = {
+            "sql": signed_sqls,
+        }
+        params.update(other_pairs)
+        return HttpResponseRedirect(request.path + "?" + urlencode(params, doseq=True))
+    sql_queries = []
+    for signed_sql in request.GET.getlist("sql"):
+        try:
+            sql_queries.append(signing.loads(signed_sql, salt=SQL_SALT))
+        except ValueError:
+            pass
     return _dashboard_index(request, sql_queries, title="Django SQL Dashboard")
 
 

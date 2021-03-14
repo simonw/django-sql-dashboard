@@ -1,45 +1,26 @@
-import pytest
-from django.contrib.auth.models import Permission
 from django_sql_dashboard.models import Dashboard
+from django_sql_dashboard.utils import SQL_SALT
+from django.core import signing
+import urllib.parse
 
 
-def test_anonymous_users_denied(client):
-    response = client.get("/dashboard/?sql=select+1")
+def test_dashboard_submit_sql(admin_client, dashboard_db):
+    # Test full flow of POST submitting new SQL, having it signed
+    # and having it redirect to the results page
+    assert admin_client.get("/dashboard/").status_code == 200
+    sql = "select 14 + 33"
+    response = admin_client.post("/dashboard/", {"sql": sql})
     assert response.status_code == 302
-    assert response.url == "/accounts/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
+    # Should redirect to ?sql=signed-value
+    signed_sql = urllib.parse.parse_qs(response.url.split("?")[1])["sql"][0]
+    assert signed_sql == signing.dumps(sql, salt=SQL_SALT)
+    # GET against this new location should return correct result
+    get_response = admin_client.get(response.url)
+    assert get_response.status_code == 200
+    assert b"47" in get_response.content
 
 
-def test_superusers_allowed(admin_client, dashboard_db):
-    response = admin_client.get("/dashboard/")
-    assert response.status_code == 200
-    assert b"<title>Django SQL Dashboard</title>" in response.content
-
-
-def test_must_have_execute_sql_permission(client, django_user_model, dashboard_db):
-    execute_sql = Permission.objects.get(
-        content_type__app_label="django_sql_dashboard",
-        content_type__model="dashboard",
-        codename="execute_sql",
-    )
-    not_staff = django_user_model.objects.create(username="not_staff")
-    staff_no_permisssion = django_user_model.objects.create(
-        username="staff_no_permission", is_staff=True
-    )
-    staff_with_permission = django_user_model.objects.create(
-        username="staff_with_permission", is_staff=True
-    )
-    staff_with_permission.user_permissions.add(execute_sql)
-    assert staff_with_permission.has_perm("django_sql_dashboard.execute_sql")
-    client.force_login(not_staff)
-    assert client.get("/dashboard/").status_code == 302
-    client.force_login(staff_no_permisssion)
-    assert client.get("/dashboard/").status_code == 302
-    client.force_login(staff_with_permission)
-    assert client.get("/dashboard/").status_code == 200
-
-
-@pytest.mark.django_db
-def test_dashboard(client, admin_client, dashboard_db):
+def test_saved_dashboard(client, admin_client, dashboard_db):
     assert client.get("/dashboard/test/").status_code == 404
     dashboard = Dashboard.objects.create(slug="test")
     dashboard.queries.create(sql="select 11 + 33")

@@ -1,0 +1,61 @@
+<div class="query-results">
+  <script
+    src="https://cdn.jsdelivr.net/npm/vega@5.19.1"
+    integrity="sha384-dhyUMwHr1RzDslJIbzN+8UMRMobmqrmABSU3vFSBBnARl6XwbW37TVDCTQs+yEc5"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/vega-lite@5.0.0"
+    integrity="sha384-nAwfbn/eKhGkpj7MbyqVuoGEyL/iSeZq4XJ1NNOxA9nT7eXfJuUQgpxYd27m1tAO"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/vega-embed@6.15.1"
+    integrity="sha384-RvXMbul/5q2mGE4PXcky3u5+A/K3lk/jv+oizUX/InRPD9wELInOy6YwUxdk/tEu"
+    crossorigin="anonymous"
+  ></script>
+  <div id="vis{{ result.index }}"></div>
+  {% with "vis-data-"|add:result.index as script_name %}
+  {{ result.rows|json_script:script_name }}
+  <script>
+    vegaEmbed("#vis{{ result.index }}", {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      description: "A simple bar chart with embedded data.",
+      data: {
+        values: JSON.parse(
+          document.getElementById("{{ script_name }}").textContent
+        ),
+      },
+      mark: "bar",
+      encoding: {
+        x: {
+          field: "bar_label",
+          title: "Label",
+          type: "nominal",
+          axis: { labelAngle: 90 },
+        },
+        y: { field: "bar_quantity", title: "Quantity", type: "quantitative" },
+      },
+    });
+  </script>
+  {% endwith %}
+  <details>
+    <summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer">
+      SQL query
+    </summary>
+    {% if saved_dashboard %}
+    <pre>{{ result.sql }}</pre>
+    {% else %}
+      <textarea name="sql">{{ result.sql|default:"" }}</textarea>
+    {% endif %}
+    {% if not saved_dashboard %}
+    <p>
+      <input
+        class="btn"
+        type="submit"
+        value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+      />
+    </p>
+    {% endif %}
+  </details>
+</div>

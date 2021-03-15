@@ -19,6 +19,7 @@ This is **very early alpha**. You should not yet trust this code, especially wit
 - [Usage](#usage)
   * [SQL parameters](#sql-parameters)
   * [Widgets](#widgets)
+    + [bar_label, bar_quantity](#bar_label-bar_quantity)
     + [big_number, label](#big_number-label)
     + [markdown](#markdown)
     + [html](#html)

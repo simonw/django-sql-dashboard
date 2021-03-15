@@ -13,6 +13,16 @@ Currently only works with PostgreSQL.
 This is **very early alpha**. You should not yet trust this code, especially with regards to security. Do not run this in production (yet)!
 
 <!-- toc -->
+
+- [Screenshot](#screenshot)
+- [Installation](#installation)
+- [Usage](#usage)
+  * [SQL parameters](#sql-parameters)
+  * [Widgets](#widgets)
+    + [Big number: big_namber, label](#big-number-big_namber-label)
+    + [Custom widgets](#custom-widgets)
+- [Development](#development)
+
 <!-- tocstop -->
 
 ## Screenshot

@@ -1,0 +1,17 @@
+{% load django_sql_dashboard %}<div class="query-results">
+  {% for row in result.rows %}
+  {{ row.markdown|sql_dashboard_markdown }}
+  {% endfor %}
+  <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
+  {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea
+  name="sql" style="height: 10em;"
+>{{ result.sql|default:"" }}</textarea>{% endif %}
+{% if not saved_dashboard %}<p>
+  <input
+    class="btn"
+    type="submit"
+    value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+  />
+</p>{% endif %}
+</details>
+</div>

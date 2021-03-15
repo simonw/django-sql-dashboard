@@ -98,15 +98,31 @@ Any `%` characters - for example in the `ilike` query above - need to be escaped
 
 SQL queries default to displaying as a table. Other forms of display - called widgets - are also available, and are selected based on the names of the columns returned by the query.
 
-#### Big number: big_namber, label
+#### big_number, label
 
 If you want to display the results as a big number accompanied by a label, you can do so by returning `big_number` and `label` columns from your query, for example.
 
 ```sql
-select 'Number of states' as label, count(*) as big_number from state;
+select 'Number of states' as label, count(*) as big_number from states;
 ```
 
-#### Custom widgets
+#### markdown
+
+Return a single column called `markdown` to render the contents as Markdown, for example:
+
+```sql
+select '# Number of states: ' || count(*) as markdown from states;
+```
+
+#### html
+
+Return a single column called `html` to render the contents directly as HTML. This HTML is filtered using [Bleach](https://github.com/mozilla/bleach) so the only tags allowed are `a[href]`, `abbr`, `acronym`, `b`, `blockquote`, `code`, `em`, `i`, `li`, `ol`, `strong`, `ul`, `pre`, `p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`.
+
+```sql
+select '<h1>Number of states: ' || count(*) || '</h1> as markdown from states;
+```
+
+### Custom widgets
 
 You can define your own custom widgets by creating templates with special names.
 

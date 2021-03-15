@@ -36,7 +36,7 @@ setup(
             "templatetags/*.py",
         ]
     },
-    install_requires=["Django"],
+    install_requires=["Django", "markdown", "bleach"],
     extras_require={
         "test": [
             "psycopg2",

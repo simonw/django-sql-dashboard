@@ -19,8 +19,10 @@ This is **very early alpha**. You should not yet trust this code, especially wit
 - [Usage](#usage)
   * [SQL parameters](#sql-parameters)
   * [Widgets](#widgets)
-    + [Big number: big_namber, label](#big-number-big_namber-label)
-    + [Custom widgets](#custom-widgets)
+    + [big_number, label](#big_number-label)
+    + [markdown](#markdown)
+    + [html](#html)
+  * [Custom widgets](#custom-widgets)
 - [Development](#development)
 
 <!-- tocstop -->

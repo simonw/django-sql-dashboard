@@ -1,9 +1,26 @@
+from collections import namedtuple
 import json
 
 SQL_SALT = "django_sql_dashboard:query"
 
 
-def displayable_rows(rows):
+class Row:
+    def __init__(self, values, columns):
+        self.values = values
+        self.columns = columns
+        self.zipped = dict(zip(columns, values))
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.values[key]
+        else:
+            return self.zipped[key]
+
+    def __str__(self):
+        return str(self.zipped)
+
+
+def displayable_rows(rows, columns):
     fixed = []
     for row in rows:
         fixed_row = []
@@ -11,7 +28,7 @@ def displayable_rows(rows):
             if isinstance(cell, (dict, list)):
                 cell = json.dumps(cell)
             fixed_row.append(cell)
-        fixed.append(fixed_row)
+        fixed.append(Row(fixed_row, columns))
     return fixed
 
 

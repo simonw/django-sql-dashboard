@@ -80,6 +80,10 @@ def _dashboard_index(
                         "description": [],
                         "truncated": False,
                         "error": "';' not allowed in SQL queries",
+                        "templates": [
+                            "django_sql_dashboard/widgets/error.html",
+                            "django_sql_dashboard/widgets/default.html",
+                        ],
                     }
                 )
                 continue
@@ -105,16 +109,29 @@ def _dashboard_index(
                             "description": [],
                             "truncated": False,
                             "error": str(e),
+                            "templates": [
+                                "django_sql_dashboard/widgets/error.html",
+                                "django_sql_dashboard/widgets/default.html",
+                            ],
                         }
                     )
                 else:
+                    template_name = "-".join(sorted(c.name for c in cursor.description))
                     query_results.append(
                         {
                             "sql": sql,
-                            "rows": displayable_rows(rows[:100]),
+                            "rows": displayable_rows(
+                                rows[:100], [c.name for c in cursor.description]
+                            ),
                             "description": cursor.description,
                             "truncated": len(rows) == 101,
                             "duration_ms": duration_ms,
+                            "templates": [
+                                "django_sql_dashboard/widgets/"
+                                + template_name
+                                + ".html",
+                                "django_sql_dashboard/widgets/default.html",
+                            ],
                         }
                     )
                 finally:

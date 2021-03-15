@@ -64,6 +64,41 @@ The values provided by the user will always be treated like strings - so in this
 
 Any `%` characters - for example in the `ilike` query above - need to be escaped by providing them twice: `%%`.
 
+### Widgets
+
+SQL queries default to displaying as a table. Other forms of display - called widgets - are also available, and are selected based on the names of the columns returned by the query.
+
+#### Big number: big_namber, label
+
+If you want to display the results as a big number accompanied by a label, you can do so by returning `big_number` and `label` columns from your query, for example.
+
+```sql
+select 'Number of states' as label, count(*) as big_number from state;
+```
+
+#### Custom widgets
+
+You can define your own custom widgets by creating templates with special names.
+
+Decide on the column names that you wish to customize for, then sort them alphabetically and join them with hyphens to create your template name.
+
+For example, you could define a widget that handles results returned as `placename`, `geojson` by creating a template called `geojson-label.html`.
+
+Save that in one of your template directories as `django_sql_dashboard/widgets/geojson-label.html`.
+
+Any SQL query that returns exactly the columns `placename` and `geojson` will now be rendered by your custom template file.
+
+Within your custom template you will have access to a template variable called `result` with the following keys:
+
+- `result.sql` - the SQL query that is being displayed
+- `rows` - a list of rows, where each row is an object that can be accessed by index or by column name, e.g. `{{ row.big_number }}`.
+- `description` - the psycopg2 cursor description
+- `truncated` - boolean, specifying whether the results were truncated (at 100 items) or not
+- `duration_ms` - how long the query took, in floating point milliseconds
+- `templates` - a list of templates that were considered for rendering this widget
+
+You can find examples of widget templates in the [templates/django_sql_dashboard/widgets](https://github.com/simonw/django-sql-dashboard/tree/main/django_sql_dashboard/templates/django_sql_dashboard/widgets) directory.
+
 ## Development
 
 To contribute to this library, first checkout the code. Then create a new virtual environment:

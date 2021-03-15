@@ -1,0 +1,38 @@
+{% load django_sql_dashboard %}<div class="query-results">
+  {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea
+    name="sql"
+  >{{ result.sql|default:"" }}</textarea>{% endif %}
+  {% if not saved_dashboard %}<p>
+    <input
+      class="btn"
+      type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+    />
+  </p>{% endif %}
+  {% if result.truncated %}Results were truncated{% endif %}
+  {% if result.error %}
+  <p style="background-color: pink; padding: 1em; margin: 1em 0">
+    {{ result.error }}
+  </p>
+  {% endif %}
+  <table>
+    <thead>
+      <tr>
+        {% for column in result.description %}
+        <th alt="{{ column }}">{{ column.name }}{% if user_can_execute_sql %} [<a href="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql %}select "{{ column.name }}", count(*) as n from ({{ result.sql }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}">count</a>]{% endif %}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in result.rows %}
+      <tr>
+        {% for item in row %}
+        <td>{% if item is None %}<span class="null">- null -</span>{% else %}{{ item }}{% endif %}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
+  <!-- templates considered: {{ result.templates|join:", " }} -->
+</div>

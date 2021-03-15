@@ -32,6 +32,7 @@ setup(
         "django_sql_dashboard": [
             "templates/django_sql_dashboard/*.html",
             "migrations/*.py",
+            "templatetags/*.py",
         ]
     },
     install_requires=["Django"],

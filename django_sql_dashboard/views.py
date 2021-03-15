@@ -14,6 +14,12 @@ from .models import Dashboard
 from .utils import displayable_rows, extract_named_parameters, SQL_SALT
 
 
+ERROR_TEMPLATES = [
+    "django_sql_dashboard/widgets/error.html",
+    "django_sql_dashboard/widgets/default.html",
+]
+
+
 @permission_required("django_sql_dashboard.execute_sql")
 def dashboard_index(request):
     if request.method == "POST":
@@ -80,10 +86,7 @@ def _dashboard_index(
                         "description": [],
                         "truncated": False,
                         "error": "';' not allowed in SQL queries",
-                        "templates": [
-                            "django_sql_dashboard/widgets/error.html",
-                            "django_sql_dashboard/widgets/default.html",
-                        ],
+                        "templates": ERROR_TEMPLATES,
                     }
                 )
                 continue
@@ -109,14 +112,22 @@ def _dashboard_index(
                             "description": [],
                             "truncated": False,
                             "error": str(e),
-                            "templates": [
-                                "django_sql_dashboard/widgets/error.html",
-                                "django_sql_dashboard/widgets/default.html",
-                            ],
+                            "templates": ERROR_TEMPLATES,
                         }
                     )
                 else:
-                    template_name = "-".join(sorted(c.name for c in cursor.description))
+                    templates = [
+                        "django_sql_dashboard/widgets/default.html"
+                    ]
+                    template_name = (
+                        "-".join(sorted(c.name for c in cursor.description))
+                    ) + ".html"
+                    if len(template_name) < 255:
+                        templates.insert(
+                            0,
+                            "django_sql_dashboard/widgets/"
+                            + template_name,
+                        )
                     query_results.append(
                         {
                             "sql": sql,
@@ -126,12 +137,7 @@ def _dashboard_index(
                             "description": cursor.description,
                             "truncated": len(rows) == 101,
                             "duration_ms": duration_ms,
-                            "templates": [
-                                "django_sql_dashboard/widgets/"
-                                + template_name
-                                + ".html",
-                                "django_sql_dashboard/widgets/default.html",
-                            ],
+                            "templates": templates,
                         }
                     )
                 finally:

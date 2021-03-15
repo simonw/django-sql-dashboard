@@ -34,3 +34,13 @@ def test_saved_dashboard(client, admin_client, dashboard_db):
     admin_response = admin_client.get("/dashboard/test/")
     assert admin_response.status_code == 200
     assert b">count<" in admin_response.content
+
+
+def test_many_long_column_names(admin_client, dashboard_db):
+    # https://github.com/simonw/django-sql-dashboard/issues/23
+    columns = ["column{}".format(i) for i in range(200)]
+    sql = "select " + ", ".join(
+        "'{}' as {}".format(column, column) for column in columns
+    )
+    response = admin_client.post("/dashboard/", {"sql": sql}, follow=True)
+    assert response.status_code == 200

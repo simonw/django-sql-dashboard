@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-VERSION = "0.2a1"
+VERSION = "0.2a2"
 
 
 def get_long_description():
@@ -31,6 +31,7 @@ setup(
     package_data={
         "django_sql_dashboard": [
             "templates/django_sql_dashboard/*.html",
+            "templates/django_sql_dashboard/widgets/*.html",
             "migrations/*.py",
             "templatetags/*.py",
         ]

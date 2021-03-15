@@ -100,6 +100,30 @@ Any `%` characters - for example in the `ilike` query above - need to be escaped
 
 SQL queries default to displaying as a table. Other forms of display - called widgets - are also available, and are selected based on the names of the columns returned by the query.
 
+#### bar_label, bar_quantity
+
+A query that returns columns called `bar_label` and `bar_quantity` will be rendered as a simple bar chart, using [Vega-Lite](https://vega.github.io/vega-lite/).
+
+For example:
+
+```sql
+select
+  county.name as bar_label,
+  count(*) as bar_quantity
+from location
+  join county on county.id = location.county_id
+group by county.name
+order by count(*) desc limit 10
+```
+
+Or using a static list of values:
+
+```sql
+SELECT * FROM (
+    VALUES (1, 'one'), (2, 'two'), (3, 'three')
+) AS t (bar_quantity, bar_label);
+```
+
 #### big_number, label
 
 If you want to display the results as a big number accompanied by a label, you can do so by returning `big_number` and `label` columns from your query, for example.
@@ -139,7 +163,8 @@ Any SQL query that returns exactly the columns `placename` and `geojson` will no
 Within your custom template you will have access to a template variable called `result` with the following keys:
 
 - `result.sql` - the SQL query that is being displayed
-- `rows` - a list of rows, where each row is an object that can be accessed by index or by column name, e.g. `{{ row.big_number }}`.
+- `rows` - a list of rows, where each row is a dictionary mapping columns to their values
+- `row_lists` - a list of rows, where each row is a list of the values in that row
 - `description` - the psycopg2 cursor description
 - `truncated` - boolean, specifying whether the results were truncated (at 100 items) or not
 - `duration_ms` - how long the query took, in floating point milliseconds

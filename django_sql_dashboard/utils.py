@@ -16,8 +16,8 @@ class Row:
         else:
             return self.zipped[key]
 
-    def __str__(self):
-        return str(self.zipped)
+    def __repr__(self):
+        return json.dumps(self.zipped)
 
 
 def displayable_rows(rows, columns):
@@ -28,7 +28,7 @@ def displayable_rows(rows, columns):
             if isinstance(cell, (dict, list)):
                 cell = json.dumps(cell)
             fixed_row.append(cell)
-        fixed.append(Row(fixed_row, columns))
+        fixed.append(dict(zip(columns, fixed_row)))
     return fixed
 
 

@@ -24,7 +24,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for row in result.rows %}
+      {% for row in result.row_lists %}
       <tr>
         {% for item in row %}
         <td>{% if item is None %}<span class="null">- null -</span>{% else %}{{ item }}{% endif %}</td>

@@ -74,15 +74,18 @@ def _dashboard_index(
         for parameter in parameters
         if parameter != "sql"
     }
-
+    results_index = -1
     if sql_queries:
         for sql in sql_queries:
+            results_index += 1
             sql = sql.strip()
             if ";" in sql.rstrip(";"):
                 query_results.append(
                     {
+                        "index": str(results_index),
                         "sql": sql,
                         "rows": [],
+                        "row_lists": [],
                         "description": [],
                         "truncated": False,
                         "error": "';' not allowed in SQL queries",
@@ -107,8 +110,10 @@ def _dashboard_index(
                 except Exception as e:
                     query_results.append(
                         {
+                            "index": str(results_index),
                             "sql": sql,
                             "rows": [],
+                            "row_lists": [],
                             "description": [],
                             "truncated": False,
                             "error": str(e),
@@ -116,24 +121,24 @@ def _dashboard_index(
                         }
                     )
                 else:
-                    templates = [
-                        "django_sql_dashboard/widgets/default.html"
-                    ]
-                    template_name = (
-                        "-".join(sorted(c.name for c in cursor.description))
-                    ) + ".html"
+                    templates = ["django_sql_dashboard/widgets/default.html"]
+                    columns = [c.name for c in cursor.description]
+                    template_name = ("-".join(sorted(columns))) + ".html"
                     if len(template_name) < 255:
                         templates.insert(
                             0,
-                            "django_sql_dashboard/widgets/"
-                            + template_name,
+                            "django_sql_dashboard/widgets/" + template_name,
                         )
+                    display_rows = displayable_rows(rows[:100], columns)
                     query_results.append(
                         {
+                            "index": str(results_index),
                             "sql": sql,
-                            "rows": displayable_rows(
-                                rows[:100], [c.name for c in cursor.description]
-                            ),
+                            "rows": display_rows,
+                            "row_lists": [
+                                [row[column] for column in columns]
+                                for row in display_rows
+                            ],
                             "description": cursor.description,
                             "truncated": len(rows) == 101,
                             "duration_ms": duration_ms,

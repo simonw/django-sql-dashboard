@@ -48,7 +48,6 @@ setup(
             "beautifulsoup4",
             "html5lib",
         ],
-        "docs": ["sphinx_rtd_theme", "sphinx-autobuild", "myst-parser"],
     },
     tests_require=["django-sql-dashboard[test]"],
     python_requires=">=3.6",

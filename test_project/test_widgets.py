@@ -24,7 +24,6 @@ def test_default_widget(admin_client, dashboard_db):
     assert soup.select("textarea#copyable-0")[0].text == (
         "id\tname\tsize\n" "1\tone\t4.5\n" "2\ttwo\t3.6\n" "3\tthree\t4.1"
     )
-    assert False
 
 
 def test_big_number_widget(admin_client, dashboard_db):

@@ -21,6 +21,7 @@ setup(
     author="Simon Willison",
     url="https://github.com/simonw/django-sql-dashboard",
     project_urls={
+        "Documentation": "https://django-sql-dashboard.readthedocs.io/",
         "Issues": "https://github.com/simonw/django-sql-dashboard/issues",
         "CI": "https://github.com/simonw/django-sql-dashboard/actions",
         "Changelog": "https://github.com/simonw/django-sql-dashboard/releases",

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Permission
+from django_sql_dashboard.models import Dashboard
 
 
 def test_anonymous_users_denied(client):
@@ -34,3 +35,19 @@ def test_must_have_execute_sql_permission(client, django_user_model, dashboard_d
     assert client.get("/dashboard/").status_code == 302
     client.force_login(staff_with_permission)
     assert client.get("/dashboard/").status_code == 200
+
+
+def test_saved_dashboard_anonymous_users_denied(client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="test")
+    dashboard.queries.create(sql="select 11 + 34")
+    response = client.get("/dashboard/test/")
+    assert response.status_code == 302
+    assert response.url == "/accounts/login/?next=/dashboard/test/"
+
+
+def test_saved_dashboard_superusers_allowed(admin_client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="test")
+    dashboard.queries.create(sql="select 11 + 34")
+    response = admin_client.get("/dashboard/test/")
+    assert response.status_code == 200
+    assert b"45" in response.content

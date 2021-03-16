@@ -21,19 +21,15 @@ def test_dashboard_submit_sql(admin_client, dashboard_db):
 
 
 def test_saved_dashboard(client, admin_client, dashboard_db):
-    assert client.get("/dashboard/test/").status_code == 404
+    assert admin_client.get("/dashboard/test/").status_code == 404
     dashboard = Dashboard.objects.create(slug="test")
     dashboard.queries.create(sql="select 11 + 33")
     dashboard.queries.create(sql="select 22 + 55")
-    response = client.get("/dashboard/test/")
+    response = admin_client.get("/dashboard/test/")
     assert response.status_code == 200
     assert b"44" in response.content
     assert b"77" in response.content
-    # The admin user should get >count< links, but anon should not
-    assert b">count<" not in response.content
-    admin_response = admin_client.get("/dashboard/test/")
-    assert admin_response.status_code == 200
-    assert b">count<" in admin_response.content
+    assert b">count<" in response.content
 
 
 def test_many_long_column_names(admin_client, dashboard_db):

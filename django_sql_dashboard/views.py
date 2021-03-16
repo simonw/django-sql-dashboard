@@ -164,6 +164,7 @@ def _dashboard_index(
     )
 
 
+@permission_required("django_sql_dashboard.execute_sql")
 def dashboard(request, slug):
     dashboard = get_object_or_404(Dashboard, slug=slug)
     return _dashboard_index(

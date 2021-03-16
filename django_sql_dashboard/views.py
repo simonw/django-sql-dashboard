@@ -1,18 +1,16 @@
 import time
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core import signing
 from django.db import connections
 from django.db.utils import ProgrammingError
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.conf import settings
-
-from urllib.parse import urlencode
 
 from .models import Dashboard
-from .utils import displayable_rows, extract_named_parameters, SQL_SALT
-
+from .utils import SQL_SALT, displayable_rows, extract_named_parameters
 
 ERROR_TEMPLATES = [
     "django_sql_dashboard/widgets/error.html",
@@ -74,6 +72,7 @@ def _dashboard_index(
         for parameter in parameters
         if parameter != "sql"
     }
+    extra_qs = "&{}".format(urlencode(parameter_values)) if parameter_values else ""
     results_index = -1
     if sql_queries:
         for sql in sql_queries:
@@ -89,6 +88,7 @@ def _dashboard_index(
                         "description": [],
                         "columns": [],
                         "truncated": False,
+                        "extra_qs": extra_qs,
                         "error": "';' not allowed in SQL queries",
                         "templates": ERROR_TEMPLATES,
                     }
@@ -118,6 +118,7 @@ def _dashboard_index(
                             "description": [],
                             "columns": [],
                             "truncated": False,
+                            "extra_qs": extra_qs,
                             "error": str(e),
                             "templates": ERROR_TEMPLATES,
                         }
@@ -144,6 +145,7 @@ def _dashboard_index(
                             "description": cursor.description,
                             "columns": columns,
                             "truncated": len(rows) == 101,
+                            "extra_qs": extra_qs,
                             "duration_ms": duration_ms,
                             "templates": templates,
                         }

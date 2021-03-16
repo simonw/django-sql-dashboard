@@ -33,6 +33,41 @@
       {% endfor %}
     </tbody>
   </table>
+  <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy data</summary>
+    <textarea id="copyable-{{ result.index }}" style="height: 10em">{{ result|sql_dashboard_tsv }}</textarea>
+  </details>
+  {% if not saved_dashboard %}<p>
+    <input
+      class="btn"
+      type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+    />
+  </p>{% endif %}
+  </details>
   <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
   <!-- templates considered: {{ result.templates|join:", " }} -->
+  <script>
+  (function() {
+    var ta = document.querySelector("#copyable-{{ result.index }}");
+    var button = document.createElement("button");
+    button.className = "copyable-copy-button btn";
+    button.style.fontSize = '0.6em';
+    button.innerHTML = "Copy to clipboard";
+    button.onclick = (ev) => {
+      ev.preventDefault();
+      ta.select();
+      document.execCommand("copy");
+      button.innerHTML = "Copied!";
+      setTimeout(() => {
+          button.innerHTML = "Copy to clipboard";
+      }, 1500);
+    };
+    var p = document.createElement('p');
+    p.style.marginTop = '0.2em';
+    ta.insertAdjacentElement("afterend", p);
+    console.log(button);
+    console.log(ta);
+    p.insertAdjacentElement("afterbegin", button);
+  })();
+  </script>
 </div>

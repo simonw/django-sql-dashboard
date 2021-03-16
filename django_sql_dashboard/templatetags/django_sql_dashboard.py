@@ -1,3 +1,5 @@
+import csv
+import io
 import bleach
 import markdown
 from django import template
@@ -63,3 +65,13 @@ def sql_dashboard_markdown(value):
             )
         )
     )
+
+
+@register.filter
+def sql_dashboard_tsv(result):
+    writer = io.StringIO()
+    csv_writer = csv.writer(writer, delimiter="\t")
+    csv_writer.writerow(result["columns"])
+    for row in result["row_lists"]:
+        csv_writer.writerow(row)
+    return writer.getvalue().strip()

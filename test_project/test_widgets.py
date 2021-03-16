@@ -1,3 +1,32 @@
+from bs4 import BeautifulSoup
+import textwrap
+
+
+def test_default_widget(admin_client, dashboard_db):
+    response = admin_client.post(
+        "/dashboard/",
+        {
+            "sql": """
+            SELECT * FROM (
+                VALUES (1, 'one', 4.5), (2, 'two', 3.6), (3, 'three', 4.1)
+            ) AS t (id, name, size)"""
+        },
+        follow=True,
+    )
+    html = response.content.decode("utf-8")
+    soup = BeautifulSoup(html, "html5lib")
+    assert soup.find("textarea").text == (
+        "SELECT * FROM (\n"
+        "                VALUES (1, 'one', 4.5), (2, 'two', 3.6), (3, 'three', 4.1)\n"
+        "            ) AS t (id, name, size)"
+    )
+    # Copyable area:
+    assert soup.select("textarea#copyable-0")[0].text == (
+        "id\tname\tsize\n" "1\tone\t4.5\n" "2\ttwo\t3.6\n" "3\tthree\t4.1"
+    )
+    assert False
+
+
 def test_big_number_widget(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",

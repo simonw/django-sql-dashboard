@@ -87,6 +87,7 @@ def _dashboard_index(
                         "rows": [],
                         "row_lists": [],
                         "description": [],
+                        "columns": [],
                         "truncated": False,
                         "error": "';' not allowed in SQL queries",
                         "templates": ERROR_TEMPLATES,
@@ -115,6 +116,7 @@ def _dashboard_index(
                             "rows": [],
                             "row_lists": [],
                             "description": [],
+                            "columns": [],
                             "truncated": False,
                             "error": str(e),
                             "templates": ERROR_TEMPLATES,
@@ -140,6 +142,7 @@ def _dashboard_index(
                                 for row in display_rows
                             ],
                             "description": cursor.description,
+                            "columns": columns,
                             "truncated": len(rows) == 101,
                             "duration_ms": duration_ms,
                             "templates": templates,

@@ -167,6 +167,7 @@ Within your custom template you will have access to a template variable called `
 - `rows` - a list of rows, where each row is a dictionary mapping columns to their values
 - `row_lists` - a list of rows, where each row is a list of the values in that row
 - `description` - the psycopg2 cursor description
+- `columns` - a list of string column names
 - `truncated` - boolean, specifying whether the results were truncated (at 100 items) or not
 - `duration_ms` - how long the query took, in floating point milliseconds
 - `templates` - a list of templates that were considered for rendering this widget

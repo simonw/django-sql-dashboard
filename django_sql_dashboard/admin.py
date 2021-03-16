@@ -13,3 +13,15 @@ class DashboardAdmin(admin.ModelAdmin):
     inlines = [
         DashboardQueryInline,
     ]
+    raw_id_fields = ("created_by",)
+    readonly_fields = ("created_at",)
+    fieldsets = (
+        (
+            None,
+            {"fields": ("slug", "title", "description", "created_by", "created_at")},
+        ),
+        (
+            "Permissions",
+            {"fields": ("view_policy", "edit_policy", "view_group", "edit_group")},
+        ),
+    )

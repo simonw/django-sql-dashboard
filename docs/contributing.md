@@ -20,6 +20,13 @@ To run the tests:
 
     pytest
 
+## Generating new migrations
+
+To generate migrations for model changes:
+
+    cd test_project
+    ./manage.py makemigrations
+
 ## Code style
 
 This library uses [Black](https://github.com/psf/black) for code formatting.

@@ -45,6 +45,8 @@ setup(
             "pytest-pythonpath",
             "dj-database-url",
             "testing.postgresql",
+            "beautifulsoup4",
+            "html5lib",
         ]
     },
     tests_require=["django-sql-dashboard[test]"],

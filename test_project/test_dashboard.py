@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from django_sql_dashboard.models import Dashboard
 from django_sql_dashboard.utils import SQL_SALT
 from django.core import signing
@@ -40,3 +41,17 @@ def test_many_long_column_names(admin_client, dashboard_db):
     )
     response = admin_client.post("/dashboard/", {"sql": sql}, follow=True)
     assert response.status_code == 200
+
+
+def test_dashboard_error(admin_client):
+    response = admin_client.post(
+        "/dashboard/", {"sql": "select * from not_a_table"}, follow=True
+    )
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html5lib")
+    div = soup.select(".query-results")[0]
+    assert div["class"] == ["query-results", "query-error"]
+    assert (
+        div.select(".error-message")[0].text.strip()
+        == 'relation "not_a_table" does not exist\nLINE 1: select * from not_a_table\n                      ^'
+    )

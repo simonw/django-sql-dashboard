@@ -1,0 +1,8 @@
+<div class="query-results query-error">
+  <textarea name="sql">{{ result.sql }}</textarea>
+  <p>
+    <input class="btn" type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}">
+  </p>
+  <p class="error-message" style="background-color: pink; padding: 1em; margin: 1em 0">{{ result.error }}</p>
+</div>

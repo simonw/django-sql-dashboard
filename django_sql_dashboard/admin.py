@@ -25,3 +25,8 @@ class DashboardAdmin(admin.ModelAdmin):
             {"fields": ("view_policy", "edit_policy", "view_group", "edit_group")},
         ),
     )
+
+    def save_model(self, request, obj, form, change):
+        if not obj.created_by_id:
+            obj.created_by = request.user
+        obj.save()

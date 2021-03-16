@@ -7,14 +7,15 @@ class Dashboard(models.Model):
     slug = models.SlugField(unique=True)
     title = models.CharField(blank=True, max_length=128)
     description = models.TextField(blank=True)
-    created_by = models.ForeignKey(
+    owned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="created_dashboards",
+        related_name="owned_dashboards",
+        help_text="User who owns this dashboard",
     )
-    created_at = models.DateTimeField(default=timezone.now())
+    created_at = models.DateTimeField(default=timezone.now)
 
     class ViewPolicies(models.TextChoices):
         PRIVATE = ("private", "Private")
@@ -37,11 +38,13 @@ class Dashboard(models.Model):
         max_length=10,
         choices=ViewPolicies.choices,
         default=ViewPolicies.PRIVATE,
+        help_text="Who can view this dashboard",
     )
     edit_policy = models.CharField(
         max_length=10,
         choices=EditPolicies.choices,
         default=EditPolicies.PRIVATE,
+        help_text="Who can edit this dashboard",
     )
     view_group = models.ForeignKey(
         "auth.Group",
@@ -49,6 +52,7 @@ class Dashboard(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="can_view_dashboards",
+        help_text="For group view policy",
     )
     edit_group = models.ForeignKey(
         "auth.Group",
@@ -56,6 +60,7 @@ class Dashboard(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="can_edit_dashboards",
+        help_text="For edit group policy",
     )
 
     def __str__(self):

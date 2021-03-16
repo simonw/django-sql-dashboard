@@ -13,12 +13,12 @@ class DashboardAdmin(admin.ModelAdmin):
     inlines = [
         DashboardQueryInline,
     ]
-    raw_id_fields = ("created_by",)
+    raw_id_fields = ("owned_by",)
     readonly_fields = ("created_at",)
     fieldsets = (
         (
             None,
-            {"fields": ("slug", "title", "description", "created_by", "created_at")},
+            {"fields": ("slug", "title", "description", "owned_by", "created_at")},
         ),
         (
             "Permissions",
@@ -27,6 +27,6 @@ class DashboardAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        if not obj.created_by_id:
-            obj.created_by = request.user
+        if not obj.owned_by_id:
+            obj.owned_by = request.user
         obj.save()

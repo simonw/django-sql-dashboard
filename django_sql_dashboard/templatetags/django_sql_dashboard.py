@@ -1,12 +1,13 @@
 import csv
 import io
+
 import bleach
 import markdown
 from django import template
 from django.core import signing
 from django.utils.safestring import mark_safe
-from ..utils import SQL_SALT
 
+from ..utils import SQL_SALT
 
 TAGS = [
     "a",

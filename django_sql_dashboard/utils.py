@@ -1,5 +1,5 @@
-from collections import namedtuple
 import json
+from collections import namedtuple
 
 SQL_SALT = "django_sql_dashboard:query"
 

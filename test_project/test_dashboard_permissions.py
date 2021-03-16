@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Permission
+
 from django_sql_dashboard.models import Dashboard
 
 

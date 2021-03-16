@@ -1,8 +1,10 @@
+import urllib.parse
+
 from bs4 import BeautifulSoup
+from django.core import signing
+
 from django_sql_dashboard.models import Dashboard
 from django_sql_dashboard.utils import SQL_SALT
-from django.core import signing
-import urllib.parse
 
 
 def test_dashboard_submit_sql(admin_client, dashboard_db):

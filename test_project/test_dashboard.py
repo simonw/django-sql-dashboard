@@ -25,7 +25,7 @@ def test_dashboard_submit_sql(admin_client, dashboard_db):
 
 def test_saved_dashboard(client, admin_client, dashboard_db):
     assert admin_client.get("/dashboard/test/").status_code == 404
-    dashboard = Dashboard.objects.create(slug="test")
+    dashboard = Dashboard.objects.create(slug="test", view_policy="public")
     dashboard.queries.create(sql="select 11 + 33")
     dashboard.queries.create(sql="select 22 + 55")
     response = admin_client.get("/dashboard/test/")

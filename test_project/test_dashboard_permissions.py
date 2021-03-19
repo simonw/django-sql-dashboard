@@ -1,4 +1,7 @@
-from django.contrib.auth.models import Permission
+from enum import Enum
+
+import pytest
+from django.contrib.auth.models import Group, Permission
 
 from django_sql_dashboard.models import Dashboard
 
@@ -38,17 +41,83 @@ def test_must_have_execute_sql_permission(client, django_user_model, dashboard_d
     assert client.get("/dashboard/").status_code == 200
 
 
-def test_saved_dashboard_anonymous_users_denied(client, dashboard_db):
+def test_saved_dashboard_anonymous_users_denied_by_default(client, dashboard_db):
     dashboard = Dashboard.objects.create(slug="test")
     dashboard.queries.create(sql="select 11 + 34")
     response = client.get("/dashboard/test/")
-    assert response.status_code == 302
-    assert response.url == "/accounts/login/?next=/dashboard/test/"
+    assert response.status_code == 403
 
 
-def test_saved_dashboard_superusers_allowed(admin_client, dashboard_db):
-    dashboard = Dashboard.objects.create(slug="test")
-    dashboard.queries.create(sql="select 11 + 34")
-    response = admin_client.get("/dashboard/test/")
-    assert response.status_code == 200
-    assert b"45" in response.content
+class UserType(Enum):
+    owner = 1
+    anon = 2
+    loggedin = 3
+    groupmember = 4
+    staff = 5
+    superuser = 6
+
+
+all_user_types = (
+    UserType.owner,
+    UserType.anon,
+    UserType.loggedin,
+    UserType.groupmember,
+    UserType.staff,
+    UserType.superuser,
+)
+
+
+@pytest.mark.parametrize(
+    "view_policy,user_types_who_can_see",
+    (
+        ("private", (UserType.owner,)),
+        ("public", all_user_types),
+        ("unlisted", all_user_types),
+        (
+            "loggedin",
+            (
+                UserType.owner,
+                UserType.loggedin,
+                UserType.groupmember,
+                UserType.staff,
+                UserType.superuser,
+            ),
+        ),
+        ("group", (UserType.owner, UserType.groupmember)),
+        ("staff", (UserType.owner, UserType.staff, UserType.superuser)),
+        ("superuser", (UserType.owner, UserType.superuser)),
+    ),
+)
+def test_saved_dashboard_view_permissions(
+    client, dashboard_db, view_policy, user_types_who_can_see, django_user_model
+):
+    users = {
+        UserType.owner: django_user_model.objects.create(username="owner"),
+        UserType.anon: None,
+        UserType.loggedin: django_user_model.objects.create(username="loggedin"),
+        UserType.groupmember: django_user_model.objects.create(username="groupmember"),
+        UserType.staff: django_user_model.objects.create(
+            username="staff", is_staff=True
+        ),
+        UserType.superuser: django_user_model.objects.create(
+            username="superuser", is_staff=True, is_superuser=True
+        ),
+    }
+    group = Group.objects.create(name="view-group")
+    users[UserType.groupmember].groups.add(group)
+    dashboard = Dashboard.objects.create(
+        slug="dash",
+        owned_by=users[UserType.owner],
+        view_policy=view_policy,
+        view_group=group,
+    )
+    for user_type, user in users.items():
+        if user is not None:
+            client.force_login(user)
+        else:
+            client.logout()
+        response = client.get("/dashboard/dash/")
+        if user_type in user_types_who_can_see:
+            assert response.status_code == 200
+        else:
+            assert response.status_code == 403

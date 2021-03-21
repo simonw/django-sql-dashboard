@@ -46,7 +46,12 @@ def dashboard_index(request):
 
 
 def _dashboard_index(
-    request, sql_queries, title=None, description=None, saved_dashboard=False
+    request,
+    sql_queries,
+    title=None,
+    description=None,
+    saved_dashboard=False,
+    cache_control_private=False,
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
@@ -152,7 +157,7 @@ def _dashboard_index(
                     )
                 finally:
                     cursor.execute("ROLLBACK;")
-    return render(
+    response = render(
         request,
         "django_sql_dashboard/dashboard.html",
         {
@@ -167,6 +172,9 @@ def _dashboard_index(
             "parameter_values": parameter_values.items(),
         },
     )
+    if cache_control_private:
+        response["cache-control"] = "private"
+    return response
 
 
 def dashboard(request, slug):
@@ -175,13 +183,15 @@ def dashboard(request, slug):
     view_policy = dashboard.view_policy
     owner = dashboard.owned_by
     denied = HttpResponseForbidden("You cannot access this dashboard")
+    denied["cache-control"] = "private"
+    cache_control_private = True
     if view_policy == Dashboard.ViewPolicies.PRIVATE:
         if request.user != owner:
             return denied
     elif view_policy == Dashboard.ViewPolicies.PUBLIC:
-        pass
+        cache_control_private = False
     elif view_policy == Dashboard.ViewPolicies.UNLISTED:
-        pass
+        cache_control_private = False
     elif view_policy == Dashboard.ViewPolicies.LOGGEDIN:
         if not request.user.is_authenticated:
             return denied
@@ -207,4 +217,5 @@ def dashboard(request, slug):
         title=dashboard.title,
         description=dashboard.description,
         saved_dashboard=True,
+        cache_control_private=cache_control_private,
     )

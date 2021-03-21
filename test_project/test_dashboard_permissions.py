@@ -68,11 +68,11 @@ all_user_types = (
 
 
 @pytest.mark.parametrize(
-    "view_policy,user_types_who_can_see",
+    "view_policy,user_types_who_can_see,should_cache_control_private",
     (
-        ("private", (UserType.owner,)),
-        ("public", all_user_types),
-        ("unlisted", all_user_types),
+        ("private", (UserType.owner,), True),
+        ("public", all_user_types, False),
+        ("unlisted", all_user_types, False),
         (
             "loggedin",
             (
@@ -82,14 +82,20 @@ all_user_types = (
                 UserType.staff,
                 UserType.superuser,
             ),
+            True,
         ),
-        ("group", (UserType.owner, UserType.groupmember)),
-        ("staff", (UserType.owner, UserType.staff, UserType.superuser)),
-        ("superuser", (UserType.owner, UserType.superuser)),
+        ("group", (UserType.owner, UserType.groupmember), True),
+        ("staff", (UserType.owner, UserType.staff, UserType.superuser), True),
+        ("superuser", (UserType.owner, UserType.superuser), True),
     ),
 )
 def test_saved_dashboard_view_permissions(
-    client, dashboard_db, view_policy, user_types_who_can_see, django_user_model
+    client,
+    dashboard_db,
+    view_policy,
+    user_types_who_can_see,
+    django_user_model,
+    should_cache_control_private,
 ):
     users = {
         UserType.owner: django_user_model.objects.create(username="owner"),
@@ -121,3 +127,5 @@ def test_saved_dashboard_view_permissions(
             assert response.status_code == 200
         else:
             assert response.status_code == 403
+        if should_cache_control_private:
+            assert response["cache-control"] == "private"

@@ -68,10 +68,21 @@ def _dashboard_index(
         available_tables = [t[0] for t in tables_cursor.fetchall()]
 
     parameters = []
+    sql_query_parameter_errors = []
     for sql in sql_queries:
-        for p in extract_named_parameters(sql):
-            if p not in parameters:
-                parameters.append(p)
+        try:
+            extracted = extract_named_parameters(sql)
+            for p in extracted:
+                if p not in parameters:
+                    parameters.append(p)
+            sql_query_parameter_errors.append(False)
+        except ValueError as e:
+            if "%" in sql:
+                sql_query_parameter_errors.append(
+                    r"Invalid query - try escaping single '%' as double '%%'"
+                )
+            else:
+                sql_query_parameter_errors.append(str(e))
     parameter_values = {
         parameter: request.GET.get(parameter, "")
         for parameter in parameters
@@ -80,23 +91,32 @@ def _dashboard_index(
     extra_qs = "&{}".format(urlencode(parameter_values)) if parameter_values else ""
     results_index = -1
     if sql_queries:
-        for sql in sql_queries:
+        for sql, parameter_error in zip(sql_queries, sql_query_parameter_errors):
             results_index += 1
             sql = sql.strip()
+            base_error_result = {
+                "index": str(results_index),
+                "sql": sql,
+                "rows": [],
+                "row_lists": [],
+                "description": [],
+                "columns": [],
+                "truncated": False,
+                "extra_qs": extra_qs,
+                "error": None,
+                "templates": ERROR_TEMPLATES,
+            }
+            if parameter_error:
+                query_results.append(
+                    dict(
+                        base_error_result,
+                        error=parameter_error,
+                    )
+                )
+                continue
             if ";" in sql.rstrip(";"):
                 query_results.append(
-                    {
-                        "index": str(results_index),
-                        "sql": sql,
-                        "rows": [],
-                        "row_lists": [],
-                        "description": [],
-                        "columns": [],
-                        "truncated": False,
-                        "extra_qs": extra_qs,
-                        "error": "';' not allowed in SQL queries",
-                        "templates": ERROR_TEMPLATES,
-                    }
+                    dict(base_error_result, error="';' not allowed in SQL queries")
                 )
                 continue
             with connection.cursor() as cursor:
@@ -114,20 +134,7 @@ def _dashboard_index(
                         rows = [{"statusmessage": str(cursor.statusmessage)}]
                     duration_ms = (time.perf_counter() - start) * 1000.0
                 except Exception as e:
-                    query_results.append(
-                        {
-                            "index": str(results_index),
-                            "sql": sql,
-                            "rows": [],
-                            "row_lists": [],
-                            "description": [],
-                            "columns": [],
-                            "truncated": False,
-                            "extra_qs": extra_qs,
-                            "error": str(e),
-                            "templates": ERROR_TEMPLATES,
-                        }
-                    )
+                    query_results.append(dict(base_error_result, error=str(e)))
                 else:
                     templates = ["django_sql_dashboard/widgets/default.html"]
                     columns = [c.name for c in cursor.description]

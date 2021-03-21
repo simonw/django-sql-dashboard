@@ -1,5 +1,6 @@
 import urllib.parse
 
+import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
 
@@ -45,15 +46,23 @@ def test_many_long_column_names(admin_client, dashboard_db):
     assert response.status_code == 200
 
 
-def test_dashboard_error(admin_client):
-    response = admin_client.post(
-        "/dashboard/", {"sql": "select * from not_a_table"}, follow=True
-    )
+@pytest.mark.parametrize(
+    "sql,expected_error",
+    (
+        (
+            "select * from not_a_table",
+            'relation "not_a_table" does not exist\nLINE 1: select * from not_a_table\n                      ^',
+        ),
+        (
+            "select 'foo' like 'f%'",
+            r"Invalid query - try escaping single '%' as double '%%'",
+        ),
+    ),
+)
+def test_dashboard_sql_errors(admin_client, sql, expected_error):
+    response = admin_client.post("/dashboard/", {"sql": sql}, follow=True)
     assert response.status_code == 200
     soup = BeautifulSoup(response.content, "html5lib")
     div = soup.select(".query-results")[0]
     assert div["class"] == ["query-results", "query-error"]
-    assert (
-        div.select(".error-message")[0].text.strip()
-        == 'relation "not_a_table" does not exist\nLINE 1: select * from not_a_table\n                      ^'
-    )
+    assert div.select(".error-message")[0].text.strip() == expected_error

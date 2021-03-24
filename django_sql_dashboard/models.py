@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 
@@ -65,6 +66,9 @@ class Dashboard(models.Model):
 
     def __str__(self):
         return self.slug
+
+    def get_absolute_url(self):
+        return reverse("django_sql_dashboard-dashboard", args=[self.slug])
 
     class Meta:
         permissions = [("execute_sql", "Can execute arbitrary SQL queries")]

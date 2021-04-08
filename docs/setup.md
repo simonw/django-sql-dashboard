@@ -40,3 +40,10 @@ urlpatterns = [
 ```
 
 Now visit `/dashboard/` as a staff user to start trying out the dashboard.
+
+## Additional settings
+
+You can customize the following settings in Django's `settings.py` module:
+
+- `DASHBOARD_DB_ALIAS = "db_alias"` - which database alias to use for executing these queries. Defaults to `"dashboard"`.
+- `DASHBOARD_ROW_LIMIT = 1000` - the maximum number of rows that can be returned from a query. This defaults to 100.

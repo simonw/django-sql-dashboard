@@ -55,6 +55,7 @@ def _dashboard_index(
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
+    row_limit = getattr(settings, "DASHBOARD_ROW_LIMIT", None) or 100
     connection = connections[alias]
     with connection.cursor() as tables_cursor:
         tables_cursor.execute(
@@ -129,7 +130,7 @@ def _dashboard_index(
                     cursor.fetchall()
                     cursor.execute(sql, parameter_values)
                     try:
-                        rows = list(cursor.fetchmany(101))
+                        rows = list(cursor.fetchmany(row_limit + 1))
                     except ProgrammingError as e:
                         rows = [{"statusmessage": str(cursor.statusmessage)}]
                     duration_ms = (time.perf_counter() - start) * 1000.0
@@ -144,7 +145,7 @@ def _dashboard_index(
                             0,
                             "django_sql_dashboard/widgets/" + template_name,
                         )
-                    display_rows = displayable_rows(rows[:100])
+                    display_rows = displayable_rows(rows[:row_limit])
                     query_results.append(
                         {
                             "index": str(results_index),
@@ -153,7 +154,7 @@ def _dashboard_index(
                             "row_lists": display_rows,
                             "description": cursor.description,
                             "columns": columns,
-                            "truncated": len(rows) == 101,
+                            "truncated": len(rows) == row_limit + 1,
                             "extra_qs": extra_qs,
                             "duration_ms": duration_ms,
                             "templates": templates,

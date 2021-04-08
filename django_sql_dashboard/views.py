@@ -144,16 +144,13 @@ def _dashboard_index(
                             0,
                             "django_sql_dashboard/widgets/" + template_name,
                         )
-                    display_rows = displayable_rows(rows[:100], columns)
+                    display_rows = displayable_rows(rows[:100])
                     query_results.append(
                         {
                             "index": str(results_index),
                             "sql": sql,
-                            "rows": display_rows,
-                            "row_lists": [
-                                [row[column] for column in columns]
-                                for row in display_rows
-                            ],
+                            "rows": [dict(zip(columns, row)) for row in display_rows],
+                            "row_lists": display_rows,
                             "description": cursor.description,
                             "columns": columns,
                             "truncated": len(rows) == 101,

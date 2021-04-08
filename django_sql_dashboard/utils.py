@@ -20,7 +20,7 @@ class Row:
         return json.dumps(self.zipped)
 
 
-def displayable_rows(rows, columns):
+def displayable_rows(rows):
     fixed = []
     for row in rows:
         fixed_row = []
@@ -28,7 +28,7 @@ def displayable_rows(rows, columns):
             if isinstance(cell, (dict, list)):
                 cell = json.dumps(cell)
             fixed_row.append(cell)
-        fixed.append(dict(zip(columns, fixed_row)))
+        fixed.append(fixed_row)
     return fixed
 
 

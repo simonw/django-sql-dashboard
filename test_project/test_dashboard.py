@@ -66,3 +66,19 @@ def test_dashboard_sql_errors(admin_client, sql, expected_error):
     div = soup.select(".query-results")[0]
     assert div["class"] == ["query-results", "query-error"]
     assert div.select(".error-message")[0].text.strip() == expected_error
+
+
+@pytest.mark.parametrize(
+    "sql,expected_columns,expected_rows",
+    (("select 'abc' as one, 'bcd' as one", ["one", "one"], [["abc", "bcd"]]),),
+)
+def test_dashboard_sql_queries(admin_client, sql, expected_columns, expected_rows):
+    response = admin_client.post("/dashboard/", {"sql": sql}, follow=True)
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html5lib")
+    div = soup.select(".query-results")[0]
+    columns = [th.text.split(" [")[0] for th in div.findAll("th")]
+    trs = div.find("tbody").findAll("tr")
+    rows = [[td.text for td in tr.findAll("td")] for tr in trs]
+    assert columns == expected_columns
+    assert rows == expected_rows

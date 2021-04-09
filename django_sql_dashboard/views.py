@@ -98,6 +98,7 @@ def _dashboard_index(
             base_error_result = {
                 "index": str(results_index),
                 "sql": sql,
+                "textarea_rows": len(sql.split("\n")),
                 "rows": [],
                 "row_lists": [],
                 "description": [],
@@ -150,6 +151,7 @@ def _dashboard_index(
                         {
                             "index": str(results_index),
                             "sql": sql,
+                            "textarea_rows": len(sql.split("\n")),
                             "rows": [dict(zip(columns, row)) for row in display_rows],
                             "row_lists": display_rows,
                             "description": cursor.description,

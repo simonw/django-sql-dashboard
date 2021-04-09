@@ -1,6 +1,7 @@
 {% load django_sql_dashboard %}<div class="query-results">
   {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea
     name="sql"
+    rows="{{ result.textarea_rows }}"
   >{{ result.sql|default:"" }}</textarea>{% endif %}
   {% if not saved_dashboard %}<p>
     <input

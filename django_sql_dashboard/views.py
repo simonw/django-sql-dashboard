@@ -98,7 +98,7 @@ def _dashboard_index(
             base_error_result = {
                 "index": str(results_index),
                 "sql": sql,
-                "textarea_rows": len(sql.split("\n")),
+                "textarea_rows": min(5, len(sql.split("\n"))),
                 "rows": [],
                 "row_lists": [],
                 "description": [],

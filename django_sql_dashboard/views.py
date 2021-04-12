@@ -94,7 +94,7 @@ def _dashboard_index(
     if sql_queries:
         for sql, parameter_error in zip(sql_queries, sql_query_parameter_errors):
             results_index += 1
-            sql = sql.strip()
+            sql = sql.strip().rstrip(";")
             base_error_result = {
                 "index": str(results_index),
                 "sql": sql,
@@ -116,7 +116,7 @@ def _dashboard_index(
                     )
                 )
                 continue
-            if ";" in sql.rstrip(";"):
+            if ";" in sql:
                 query_results.append(
                     dict(base_error_result, error="';' not allowed in SQL queries")
                 )

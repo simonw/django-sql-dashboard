@@ -30,6 +30,37 @@ def test_default_widget(admin_client, dashboard_db):
     )
 
 
+def test_basic_table_with_some_links(admin_client, dashboard_db):
+    response = admin_client.post(
+        "/dashboard/",
+        {
+            "sql": """
+            SELECT
+                'https://www.google.com/' as google,
+                'http://www.yahoo.com/' as yahoo,
+                'www.bing.com/' as bing,
+                123 as number,
+                'foop' as string,
+                null as this_is_null
+            """
+        },
+        follow=True,
+    )
+    html = response.content.decode("utf-8")
+    soup = BeautifulSoup(html, "html5lib")
+    trs = soup.select("table tbody tr")
+    row = trs[0]
+    tds_html = [str(td) for td in row.select("td")]
+    assert tds_html == [
+        '<td><a href="https://www.google.com/" rel="nofollow">https://www.google.com/</a></td>',
+        '<td><a href="http://www.yahoo.com/" rel="nofollow">http://www.yahoo.com/</a></td>',
+        '<td><a href="http://www.bing.com/" rel="nofollow">www.bing.com/</a></td>',
+        "<td>123</td>",
+        "<td>foop</td>",
+        '<td><span class="null">- null -</span></td>',
+    ]
+
+
 def test_default_widget_column_count_links(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",

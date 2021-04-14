@@ -181,6 +181,7 @@ def _dashboard_index(
     )
     if cache_control_private:
         response["cache-control"] = "private"
+    response["Content-Security-Policy"] = "frame-ancestors 'self'"
     return response
 
 

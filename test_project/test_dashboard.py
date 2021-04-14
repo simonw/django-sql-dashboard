@@ -11,7 +11,9 @@ from django_sql_dashboard.utils import SQL_SALT
 def test_dashboard_submit_sql(admin_client, dashboard_db):
     # Test full flow of POST submitting new SQL, having it signed
     # and having it redirect to the results page
-    assert admin_client.get("/dashboard/").status_code == 200
+    get_response = admin_client.get("/dashboard/")
+    assert get_response.status_code == 200
+    assert get_response["Content-Security-Policy"] == "frame-ancestors 'self'"
     sql = "select 14 + 33"
     response = admin_client.post("/dashboard/", {"sql": sql})
     assert response.status_code == 302

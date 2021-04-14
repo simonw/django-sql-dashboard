@@ -47,7 +47,9 @@ def test_dashboard_upgrade_old_base64_links(admin_client, dashboard_db, settings
     settings.DASHBOARD_UPGRADE_OLD_BASE64_LINKS = True
     response = admin_client.get("/dashboard/?sql=" + old_signed)
     assert response.status_code == 302
-    assert response.url == "/dashboard/?sql=select+1+%2B+1"
+    assert response.url == "/dashboard/?" + urllib.parse.urlencode(
+        {"sql": sign_sql("select 1 + 1")}
+    )
 
 
 def test_dashboard_upgrade_does_not_break_regular_pages(

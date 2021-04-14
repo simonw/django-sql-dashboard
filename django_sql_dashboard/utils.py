@@ -84,7 +84,7 @@ def check_for_base64_upgrade(queries):
     # Need to decode these and upgrade them to ?sql= links
     sqls = []
     for query in queries:
-        sqls.append(json.loads(signing.b64_decode(query.encode())))
+        sqls.append(sign_sql(json.loads(signing.b64_decode(query.encode()))))
     return "?" + urllib.parse.urlencode({"sql": sqls}, True)
 
 

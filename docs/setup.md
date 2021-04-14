@@ -47,3 +47,7 @@ You can customize the following settings in Django's `settings.py` module:
 
 - `DASHBOARD_DB_ALIAS = "db_alias"` - which database alias to use for executing these queries. Defaults to `"dashboard"`.
 - `DASHBOARD_ROW_LIMIT = 1000` - the maximum number of rows that can be returned from a query. This defaults to 100.
+
+## Custom templates
+
+The templates used by `django-sql-dashboard` extend a base template called `django_sql_dashboard/base.html`, which provides Django template blocks named `title` and `content`. You can customize the appearance of your dashboard installation by providing your own version of this base template in your own configured `templates/` directory.

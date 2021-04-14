@@ -1,136 +1,61 @@
-{% load django_sql_dashboard %}<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title }}</title>
-    <style>
-      main {
-        margin-top: 1em;
-        font-family: Helvetica, sans-serif;
-      }
-      main img {
-        height: 2em;
-      }
-      table {
-        margin-top: 1em;
-        border-collapse: collapse;
-        border-spacing: 0;
-      }
-      th {
-        white-space: nowrap;
-        text-align: left;
-        padding: 4px;
-        padding-right: 1em;
-        border-right: 1px solid #eee;
-      }
-      td {
-        border-top: 1px solid #aaa;
-        border-right: 1px solid #eee;
-        padding: 4px;
-        vertical-align: top;
-        white-space: pre-wrap;
-      }
-      span.null {
-        color: #aaa;
-        font-weight: bold;
-      }
-      .btn {
-        font-weight: 400;
-        cursor: pointer;
-        text-align: center;
-        vertical-align: middle;
-        border: 1px solid #666;
-        padding: 0.5em 0.8em;
-        font-size: 0.9rem;
-        line-height: 1;
-        border-radius: 0.25rem;
-      }
-      .query-results {
-        border: 1px solid #666;
-        border-right: none;
-        margin: 1em 0;
-        padding: 1em;
-      }
-      .query-results textarea,
-      .query-results pre {
-        width: 95%;
+{% extends "django_sql_dashboard/base.html" %}
+{% load django_sql_dashboard %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+{% if saved_dashboard %}
+  <p>{{ description }}</p>
+{% endif %}
+<form action="" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
+  {% if not saved_dashboard %}{% csrf_token %}{% endif %}
+  {% if parameter_values %}
+    <h3>Query parameters</h3>
+    <div class="query-parameters">
+    {% for name, value in parameter_values %}
+        <label for="qp{{ forloop.counter }}">{{ name }}</label>
+        <input type="text" id="qp{{ forloop.counter }}" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    </div>
+    <input
+      class="btn"
+      type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+    />
+  {% endif %}
+  {% for result in query_results %}
+    {% include result.templates with result=result %}
+  {% endfor %}
+  {% if not saved_dashboard %}
+    <p>Add another query:</p>
+
+    <textarea
+      style="
+        width: 60%;
+        height: 10em;
         border: 2px solid #666;
         padding: 0.5em;
-      }
-      .pre-results textarea {
-        height: 4em;
-      }
-      div.query-parameters {
-        width: 80%;
-        display: grid;
-        grid-template-columns: min-content auto;
-        grid-gap: 0.5em;
-        align-items: center;
-        margin-bottom: 1em;
-      }
-      div.query-parameters input[type="text"] {
-        border: 1px solid #666;
-        padding: 0.5em;
-      }
-      div.query-parameters label {
-        text-align: right;
-        font-weight: bold;
-        display: inline-block;
-        padding-right: 2em;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>{{ title }}</h1>
-      {% if not saved_dashboard %}
-        <p>{% for table in available_tables %}<a href="?sql={% filter sign_sql %}select count(*) from {{ table }}{% endfilter %}&sql={% filter sign_sql %}select * from {{ table }}{% endfilter %}">{{ table }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-      {% else %}
-        <p>{{ description }}</p>
-      {% endif %}
-      <form action="" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
-        {% if not saved_dashboard %}{% csrf_token %}{% endif %}
-        {% if parameter_values %}
-          <h3>Query parameters</h3>
-          <div class="query-parameters">
-          {% for name, value in parameter_values %}
-              <label for="qp{{ forloop.counter }}">{{ name }}</label>
-              <input type="text" id="qp{{ forloop.counter }}" name="{{ name }}" value="{{ value }}">
-          {% endfor %}
-          </div>
-          <input
-            class="btn"
-            type="submit"
-            value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-          />
-        {% endif %}
-        {% for result in query_results %}
-          {% include result.templates with result=result %}
-        {% endfor %}
-        {% if not saved_dashboard %}
-          <p>Add another query:</p>
+      "
+      name="sql"
+    ></textarea>
 
-          <textarea
-            style="
-              width: 60%;
-              height: 10em;
-              border: 2px solid #666;
-              padding: 0.5em;
-            "
-            name="sql"
-          ></textarea>
+    <p>
+      <input
+        class="btn"
+        type="submit"
+        value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+      />
+    </p>
+  {% endif %}
+</form>
 
-          <p>
-            <input
-              class="btn"
-              type="submit"
-              value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-            />
-          </p>
-        {% endif %}
-      </form>
-    </main>
-  </body>
-</html>
+{% if not saved_dashboard %}
+  <h2>Available tables</h2>
+  <ul style="column-count: 2">
+    {% for table in available_tables %}
+      <li><a href="?sql={% filter sign_sql %}select count(*) from {{ table }}{% endfilter %}&sql={% filter sign_sql %}select * from {{ table }}{% endfilter %}">{{ table }}</a></li>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

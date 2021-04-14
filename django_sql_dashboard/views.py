@@ -10,7 +10,13 @@ from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
 from .models import Dashboard
-from .utils import displayable_rows, extract_named_parameters, sign_sql, unsign_sql
+from .utils import (
+    check_for_base64_upgrade,
+    displayable_rows,
+    extract_named_parameters,
+    sign_sql,
+    unsign_sql,
+)
 
 ERROR_TEMPLATES = [
     "django_sql_dashboard/widgets/error.html",
@@ -42,6 +48,10 @@ def dashboard_index(request):
             sql_queries.append(sql)
         else:
             unverified_sql_queries.append(sql)
+    if getattr(settings, "DASHBOARD_UPGRADE_OLD_BASE64_LINKS", None):
+        redirect_querystring = check_for_base64_upgrade(sql_queries)
+        if redirect_querystring is not None:
+            return HttpResponseRedirect(request.path + redirect_querystring)
     return _dashboard_index(
         request,
         sql_queries,

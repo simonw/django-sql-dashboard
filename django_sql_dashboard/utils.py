@@ -1,4 +1,6 @@
+import binascii
 import json
+import urllib.parse
 from collections import namedtuple
 
 from django.core import signing
@@ -20,8 +22,11 @@ def unsign_sql(signed_sql, try_object=False):
         sql = signer.unsign(signed_sql)
         return sql, True
     except signing.BadSignature:
-        value, bad_sig = signed_sql.rsplit(signer.sep, 1)
-        return value, False
+        try:
+            value, bad_sig = signed_sql.rsplit(signer.sep, 1)
+            return value, False
+        except ValueError:
+            return signed_sql, False
 
 
 class Row:
@@ -66,3 +71,24 @@ def extract_named_parameters(sql):
     capture = _CaptureDict()
     sql % capture
     return capture.accessed
+
+
+def check_for_base64_upgrade(queries):
+    # Strip of the timing bit if there is one
+    queries = [q.split(":")[0] for q in queries]
+    # If every query is base64-encoded JSON, return a new querystring
+    if not all(is_valid_base64_json(query) for query in queries):
+        return
+    # Need to decode these and upgrade them to ?sql= links
+    sqls = []
+    for query in queries:
+        sqls.append(json.loads(signing.b64_decode(query.encode())))
+    return "?" + urllib.parse.urlencode({"sql": sqls}, True)
+
+
+def is_valid_base64_json(s):
+    try:
+        json.loads(signing.b64_decode(s.encode()))
+        return True
+    except (json.JSONDecodeError, binascii.Error, UnicodeDecodeError):
+        return False

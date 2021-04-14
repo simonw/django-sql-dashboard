@@ -3,7 +3,7 @@ from urllib.parse import parse_qsl
 from bs4 import BeautifulSoup
 from django.core import signing
 
-from django_sql_dashboard.utils import SQL_SALT
+from django_sql_dashboard.utils import unsign_sql
 
 
 def test_default_widget(admin_client, dashboard_db):
@@ -79,7 +79,7 @@ def test_default_widget_column_count_links(admin_client, dashboard_db):
     assert link.text == "count"
     querystring = link["href"].split("?")[1]
     bits = dict(parse_qsl(querystring))
-    assert signing.loads(bits["sql"], salt=SQL_SALT) == (
+    assert unsign_sql(bits["sql"])[0] == (
         'select "id", count(*) as n from (SELECT * FROM (\n'
         "                VALUES (1, %(label)s, 4.5), "
         "(2, 'two', 3.6), (3, 'three', 4.1)\n"

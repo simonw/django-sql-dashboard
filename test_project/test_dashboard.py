@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from django.core import signing
 
 from django_sql_dashboard.models import Dashboard
-from django_sql_dashboard.utils import sign_sql
+from django_sql_dashboard.utils import SQL_SALT, is_valid_base64_json, sign_sql
 
 
 def test_dashboard_submit_sql(admin_client, dashboard_db):
@@ -36,6 +36,18 @@ def test_invalid_signature_shows_warning(admin_client, dashboard_db):
     html = response2.content.decode("utf-8")
     assert ">Unverified SQL<" in html
     assert "<textarea>select 1 + 1</textarea>" in html
+
+
+def test_dashboard_upgrade_old_base64_links(admin_client, dashboard_db, settings):
+    old_signed = signing.dumps("select 1 + 1", salt=SQL_SALT)
+    assert is_valid_base64_json(old_signed.split(":")[0])
+    # Should do nothing without setting
+    assert admin_client.get("/dashboard/?sql=" + old_signed).status_code == 200
+    # With setting should redirect
+    settings.DASHBOARD_UPGRADE_OLD_BASE64_LINKS = True
+    response = admin_client.get("/dashboard/?sql=" + old_signed)
+    assert response.status_code == 302
+    assert response.url == "/dashboard/?sql=select+1+%2B+1"
 
 
 def test_saved_dashboard(client, admin_client, dashboard_db):

@@ -50,6 +50,15 @@ def test_dashboard_upgrade_old_base64_links(admin_client, dashboard_db, settings
     assert response.url == "/dashboard/?sql=select+1+%2B+1"
 
 
+def test_dashboard_upgrade_does_not_break_regular_pages(
+    admin_client, dashboard_db, settings
+):
+    # With setting should redirect
+    settings.DASHBOARD_UPGRADE_OLD_BASE64_LINKS = True
+    response = admin_client.get("/dashboard/")
+    assert response.status_code == 200
+
+
 def test_saved_dashboard(client, admin_client, dashboard_db):
     assert admin_client.get("/dashboard/test/").status_code == 404
     dashboard = Dashboard.objects.create(slug="test", view_policy="public")

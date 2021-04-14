@@ -74,6 +74,8 @@ def extract_named_parameters(sql):
 
 
 def check_for_base64_upgrade(queries):
+    if not queries:
+        return
     # Strip of the timing bit if there is one
     queries = [q.split(":")[0] for q in queries]
     # If every query is base64-encoded JSON, return a new querystring

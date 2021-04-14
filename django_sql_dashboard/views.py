@@ -50,7 +50,7 @@ def dashboard_index(request):
             unverified_sql_queries.append(sql)
     if getattr(settings, "DASHBOARD_UPGRADE_OLD_BASE64_LINKS", None):
         redirect_querystring = check_for_base64_upgrade(sql_queries)
-        if redirect_querystring is not None:
+        if redirect_querystring:
             return HttpResponseRedirect(request.path + redirect_querystring)
     return _dashboard_index(
         request,

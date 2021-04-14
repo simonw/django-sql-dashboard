@@ -10,7 +10,7 @@ from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
 from .models import Dashboard
-from .utils import SQL_SALT, displayable_rows, extract_named_parameters
+from .utils import displayable_rows, extract_named_parameters, sign_sql, unsign_sql
 
 ERROR_TEMPLATES = [
     "django_sql_dashboard/widgets/error.html",
@@ -28,26 +28,32 @@ def dashboard_index(request):
             for key, value in request.POST.items()
             if key not in ("sql", "csrfmiddlewaretoken")
         ]
-        signed_sqls = [
-            signing.dumps(query, salt=SQL_SALT) for query in sqls if query.strip()
-        ]
+        signed_sqls = [sign_sql(sql) for sql in sqls if sql.strip()]
         params = {
             "sql": signed_sqls,
         }
         params.update(other_pairs)
         return HttpResponseRedirect(request.path + "?" + urlencode(params, doseq=True))
     sql_queries = []
+    unverified_sql_queries = []
     for signed_sql in request.GET.getlist("sql"):
-        try:
-            sql_queries.append(signing.loads(signed_sql, salt=SQL_SALT))
-        except ValueError:
-            pass
-    return _dashboard_index(request, sql_queries, title="Django SQL Dashboard")
+        sql, signature_verified = unsign_sql(signed_sql)
+        if signature_verified:
+            sql_queries.append(sql)
+        else:
+            unverified_sql_queries.append(sql)
+    return _dashboard_index(
+        request,
+        sql_queries,
+        unverified_sql_queries=unverified_sql_queries,
+        title="Django SQL Dashboard",
+    )
 
 
 def _dashboard_index(
     request,
     sql_queries,
+    unverified_sql_queries=None,
     title=None,
     description=None,
     saved_dashboard=False,
@@ -169,6 +175,7 @@ def _dashboard_index(
         "django_sql_dashboard/dashboard.html",
         {
             "query_results": query_results,
+            "unverified_sql_queries": unverified_sql_queries,
             "available_tables": available_tables,
             "title": title,
             "description": description,

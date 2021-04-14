@@ -7,7 +7,7 @@ from django import template
 from django.core import signing
 from django.utils.safestring import mark_safe
 
-from ..utils import SQL_SALT
+from ..utils import sign_sql as sign_sql_original
 
 TAGS = [
     "a",
@@ -38,7 +38,7 @@ register = template.Library()
 
 @register.filter
 def sign_sql(value):
-    return signing.dumps(value, salt=SQL_SALT)
+    return sign_sql_original(value)
 
 
 @register.filter

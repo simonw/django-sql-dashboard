@@ -8,6 +8,18 @@
 {% if saved_dashboard %}
   <p>{{ description }}</p>
 {% endif %}
+
+{% if unverified_sql_queries %}
+  <div style="background-color: pink; padding: 0.5em 1em 1em 1em; border: 2px solid red; margin-bottom: 1em">
+    <h2 style="margin-top: 0.5em">Unverified SQL</h2>
+    <p>The link you followed here included SQL that was missing its verification signatures.</p>
+    <p>If this link was provided to you by an untrusted source, they may be trying to trick you into executing queries that you do not want to execute.</p>
+    <p>Review these queries and copy and paste them once you have confirmed them:</p>
+    {% for query in unverified_sql_queries %}
+      <p><textarea>{{ query }}</textarea></p>
+    {% endfor %}
+  </div>
+{% endif %}
 <form action="" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
   {% if not saved_dashboard %}{% csrf_token %}{% endif %}
   {% if parameter_values %}

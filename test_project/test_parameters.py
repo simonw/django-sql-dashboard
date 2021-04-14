@@ -4,7 +4,7 @@ import pytest
 from django.core import signing
 
 from django_sql_dashboard.models import Dashboard
-from django_sql_dashboard.utils import SQL_SALT
+from django_sql_dashboard.utils import sign_sql
 
 
 def test_parameter_form(admin_client, dashboard_db):
@@ -60,4 +60,4 @@ def test_parameters_applied(admin_client, dashboard_db):
 
 
 def signed_sql(queries):
-    return [signing.dumps(sql, salt=SQL_SALT) for sql in queries]
+    return [sign_sql(sql) for sql in queries]

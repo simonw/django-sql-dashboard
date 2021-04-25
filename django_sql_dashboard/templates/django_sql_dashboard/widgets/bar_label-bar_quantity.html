@@ -44,7 +44,7 @@
       SQL query
     </summary>
     {% if saved_dashboard %}
-    <pre>{{ result.sql }}</pre>
+    <pre class="sql">{{ result.sql }}</pre>
     {% else %}
       <textarea name="sql">{{ result.sql|default:"" }}</textarea>
     {% endif %}

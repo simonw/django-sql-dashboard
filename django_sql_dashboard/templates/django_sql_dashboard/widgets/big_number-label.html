@@ -4,7 +4,7 @@
   <h1>{{ row.big_number }}</h1>
   {% endfor %}
   <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
-  {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea
+  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
   name="sql"
 >{{ result.sql|default:"" }}</textarea>{% endif %}
 {% if not saved_dashboard %}<p>

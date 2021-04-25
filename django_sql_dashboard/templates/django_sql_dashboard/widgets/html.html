@@ -3,7 +3,7 @@
   {{ row.html|sql_dashboard_bleach }}
   {% endfor %}
   <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
-  {% if saved_dashboard %}<pre>{{ result.sql }}</pre>{% else %}<textarea
+  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
   name="sql" style="height: 10em;"
 >{{ result.sql|default:"" }}</textarea>{% endif %}
 {% if not saved_dashboard %}<p>

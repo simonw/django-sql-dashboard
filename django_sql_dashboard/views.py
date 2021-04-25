@@ -56,7 +56,6 @@ def dashboard_index(request):
         request,
         sql_queries,
         unverified_sql_queries=unverified_sql_queries,
-        title="Django SQL Dashboard",
     )
 
 
@@ -186,14 +185,19 @@ def _dashboard_index(
                     )
                 finally:
                     cursor.execute("ROLLBACK;")
+    # Page title, composed of truncated SQL queries
+    html_title = "SQL Dashboard"
+    if sql_queries:
+        html_title = "SQL: " + " [,] ".join(sql_queries)
     response = render(
         request,
         "django_sql_dashboard/dashboard.html",
         {
+            "title": title or "SQL Dashboard",
+            "html_title": title or html_title,
             "query_results": query_results,
             "unverified_sql_queries": unverified_sql_queries,
             "available_tables": available_tables,
-            "title": title,
             "description": description,
             "saved_dashboard": saved_dashboard,
             "user_can_execute_sql": request.user.has_perm(

@@ -15,7 +15,7 @@ def test_anonymous_users_denied(client):
 def test_superusers_allowed(admin_client, dashboard_db):
     response = admin_client.get("/dashboard/")
     assert response.status_code == 200
-    assert b"<title>Django SQL Dashboard</title>" in response.content
+    assert b"<title>SQL Dashboard</title>" in response.content
 
 
 def test_must_have_execute_sql_permission(

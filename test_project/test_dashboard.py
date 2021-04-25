@@ -8,6 +8,15 @@ from django_sql_dashboard.models import Dashboard
 from django_sql_dashboard.utils import SQL_SALT, is_valid_base64_json, sign_sql
 
 
+@pytest.fixture
+def saved_dashboard(dashboard_db):
+    dashboard = Dashboard.objects.create(
+        slug="test", title="Test dashboard", view_policy="public"
+    )
+    dashboard.queries.create(sql="select 11 + 33")
+    dashboard.queries.create(sql="select 22 + 55")
+
+
 def test_dashboard_submit_sql(admin_client, dashboard_db):
     # Test full flow of POST submitting new SQL, having it signed
     # and having it redirect to the results page
@@ -61,11 +70,8 @@ def test_dashboard_upgrade_does_not_break_regular_pages(
     assert response.status_code == 200
 
 
-def test_saved_dashboard(client, admin_client, dashboard_db):
-    assert admin_client.get("/dashboard/test/").status_code == 404
-    dashboard = Dashboard.objects.create(slug="test", view_policy="public")
-    dashboard.queries.create(sql="select 11 + 33")
-    dashboard.queries.create(sql="select 22 + 55")
+def test_saved_dashboard(client, admin_client, dashboard_db, saved_dashboard):
+    assert admin_client.get("/dashboard/test2/").status_code == 404
     response = admin_client.get("/dashboard/test/")
     assert response.status_code == 200
     assert b"44" in response.content
@@ -119,3 +125,23 @@ def test_dashboard_sql_queries(admin_client, sql, expected_columns, expected_row
     rows = [[td.text for td in tr.findAll("td")] for tr in trs]
     assert columns == expected_columns
     assert rows == expected_rows
+
+
+@pytest.mark.parametrize(
+    "path,sqls,expected_title",
+    (
+        ("/dashboard/", [], "SQL Dashboard"),
+        ("/dashboard/", ["select 1"], "SQL: select 1"),
+        ("/dashboard/", ["select 1", "select 2"], "SQL: select 1 [,] select 2"),
+        ("/dashboard/test/", [], "Test dashboard"),
+    ),
+)
+def test_dashboard_html_title(
+    admin_client, saved_dashboard, path, sqls, expected_title
+):
+    if sqls:
+        response = admin_client.post(path, {"sql": sqls}, follow=True)
+    else:
+        response = admin_client.get(path)
+    soup = BeautifulSoup(response.content, "html5lib")
+    assert soup.find("title").text == expected_title

@@ -27,4 +27,4 @@ contributing
 
 ```
 
-![Django_SQL_Dashboard screenshot](https://user-images.githubusercontent.com/9599/111020900-da352a00-837d-11eb-8991-73ec6e6608ef.png)
+<img width="1006" alt="Screenshot showing a SQL query that produces a table and one that produces a bar chart" src="https://user-images.githubusercontent.com/9599/116013366-b9026300-a5e4-11eb-85f5-3dd655acc949.png">

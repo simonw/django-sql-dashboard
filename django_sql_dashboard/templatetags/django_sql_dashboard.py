@@ -1,10 +1,11 @@
 import csv
 import io
+import json
 
 import bleach
 import markdown
 from django import template
-from django.core import signing
+from django.utils.html import escape, urlize
 from django.utils.safestring import mark_safe
 
 from ..utils import sign_sql as sign_sql_original
@@ -76,3 +77,17 @@ def sql_dashboard_tsv(result):
     for row in result["row_lists"]:
         csv_writer.writerow(row)
     return writer.getvalue().strip()
+
+
+@register.filter
+def format_cell(value):
+    if isinstance(value, str) and value and value[0] in ("{", "["):
+        try:
+            return mark_safe(
+                '<pre class="json">{}</pre>'.format(
+                    escape(json.dumps(json.loads(value), indent=2))
+                )
+            )
+        except json.JSONDecodeError:
+            pass
+    return mark_safe(urlize(value, nofollow=True, autoescape=True))

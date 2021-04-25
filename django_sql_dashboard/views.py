@@ -127,7 +127,7 @@ def _dashboard_index(
             else:
                 sql_query_parameter_errors.append(str(e))
     parameter_values = {
-        parameter: request.GET.get(parameter, "")
+        parameter: request.POST.get(parameter, request.GET.get(parameter, ""))
         for parameter in parameters
         if parameter != "sql"
     }

@@ -9,6 +9,12 @@
   <p>{{ description }}</p>
 {% endif %}
 
+{% if too_long_so_used_post %}
+  <p style="background-color: pink; padding: 0.5em 1em 1em 1em; border: 2px solid red; margin-bottom: 1em">
+    This SQL is too long to bookmark, so sharing a link to this page will not work for these queries.
+  </p>
+{% endif %}
+
 {% if unverified_sql_queries %}
   <div style="background-color: pink; padding: 0.5em 1em 1em 1em; border: 2px solid red; margin-bottom: 1em">
     <h2 style="margin-top: 0.5em">Unverified SQL</h2>

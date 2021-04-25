@@ -127,6 +127,18 @@ def test_dashboard_sql_queries(admin_client, sql, expected_columns, expected_row
     assert rows == expected_rows
 
 
+def test_dashboard_if_sql_too_long_use_post(admin_client):
+    # Queries longer than 1800 characters do not redirect to GET
+    short_sql = "select 1 + 1"
+    long_sql = "select " + "+".join(["1"] * 1801)
+    assert admin_client.post("/dashboard/", {"sql": short_sql}).status_code == 302
+    response = admin_client.post("/dashboard/", {"sql": long_sql})
+    assert response.status_code == 200
+    assert b"1801" in response.content
+    # And should not have 'count' links
+    assert b">count<" not in response.content
+
+
 @pytest.mark.parametrize(
     "path,sqls,expected_title",
     (

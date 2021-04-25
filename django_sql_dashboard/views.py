@@ -23,9 +23,14 @@ ERROR_TEMPLATES = [
     "django_sql_dashboard/widgets/default.html",
 ]
 
+# https://github.com/simonw/django-sql-dashboard/issues/58
+MAX_REDIRECT_LENGTH = 1800
+
 
 @permission_required("django_sql_dashboard.execute_sql")
 def dashboard_index(request):
+    sql_queries = []
+    too_long_so_used_post = False
     if request.method == "POST":
         # Convert ?sql= into signed values and redirect as GET
         sqls = request.POST.getlist("sql")
@@ -39,8 +44,13 @@ def dashboard_index(request):
             "sql": signed_sqls,
         }
         params.update(other_pairs)
-        return HttpResponseRedirect(request.path + "?" + urlencode(params, doseq=True))
-    sql_queries = []
+        redirect_path = request.path + "?" + urlencode(params, doseq=True)
+        # Is this short enough for us to redirect?
+        if len(redirect_path) < MAX_REDIRECT_LENGTH:
+            return HttpResponseRedirect(redirect_path)
+        else:
+            sql_queries = sqls
+            too_long_so_used_post = True
     unverified_sql_queries = []
     for signed_sql in request.GET.getlist("sql"):
         sql, signature_verified = unsign_sql(signed_sql)
@@ -56,6 +66,7 @@ def dashboard_index(request):
         request,
         sql_queries,
         unverified_sql_queries=unverified_sql_queries,
+        too_long_so_used_post=too_long_so_used_post,
     )
 
 
@@ -67,6 +78,7 @@ def _dashboard_index(
     description=None,
     saved_dashboard=False,
     cache_control_private=False,
+    too_long_so_used_post=False,
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
@@ -204,6 +216,7 @@ def _dashboard_index(
                 "django_sql_dashboard.execute_sql"
             ),
             "parameter_values": parameter_values.items(),
+            "too_long_so_used_post": too_long_so_used_post,
         },
     )
     if cache_control_private:

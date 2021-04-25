@@ -1,4 +1,8 @@
+import csv
+import hashlib
+import re
 import time
+from io import StringIO
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -6,7 +10,11 @@ from django.contrib.auth.decorators import permission_required
 from django.core import signing
 from django.db import connections
 from django.db.utils import ProgrammingError
-from django.http.response import HttpResponseForbidden, HttpResponseRedirect
+from django.http.response import (
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, render
 
 from .models import Dashboard
@@ -32,8 +40,13 @@ def dashboard_index(request):
     sql_queries = []
     too_long_so_used_post = False
     if request.method == "POST":
-        # Convert ?sql= into signed values and redirect as GET
+        # Is this an export?
+        if any(
+            k for k in request.POST.keys() if k.startswith("export_")
+        ) and request.user.has_perm("django_sql_dashboard.execute_sql"):
+            return export_sql_results(request)
         sqls = request.POST.getlist("sql")
+        # Convert ?sql= into signed values and redirect as GET
         other_pairs = [
             (key, value)
             for key, value in request.POST.items()
@@ -155,7 +168,7 @@ def _dashboard_index(
                     cursor.execute("BEGIN;")
                     start = time.perf_counter()
                     # Running a SELECT prevents future SET TRANSACTION READ WRITE:
-                    cursor.execute("SELECT 1;", parameter_values)
+                    cursor.execute("SELECT 1;")
                     cursor.fetchall()
                     cursor.execute(sql, parameter_values)
                     try:
@@ -201,6 +214,8 @@ def _dashboard_index(
     html_title = "SQL Dashboard"
     if sql_queries:
         html_title = "SQL: " + " [,] ".join(sql_queries)
+
+    user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
     response = render(
         request,
         "django_sql_dashboard/dashboard.html",
@@ -212,9 +227,8 @@ def _dashboard_index(
             "available_tables": available_tables,
             "description": description,
             "saved_dashboard": saved_dashboard,
-            "user_can_execute_sql": request.user.has_perm(
-                "django_sql_dashboard.execute_sql"
-            ),
+            "user_can_execute_sql": user_can_execute_sql,
+            "user_can_export_data": user_can_execute_sql,
             "parameter_values": parameter_values.items(),
             "too_long_so_used_post": too_long_so_used_post,
         },
@@ -267,3 +281,72 @@ def dashboard(request, slug):
         saved_dashboard=True,
         cache_control_private=cache_control_private,
     )
+
+
+non_alpha_re = re.compile(r"[^a-zA-Z0-9]")
+
+
+def export_sql_results(request):
+    export_key = [k for k in request.POST.keys() if k.startswith("export_")][0]
+    _, format, sql_index = export_key.split("_")
+    assert format in ("csv", "tsv")
+    sqls = request.POST.getlist("sql")
+    sql = sqls[int(sql_index)]
+    parameter_values = {
+        parameter: request.POST.get(parameter, "")
+        for parameter in extract_named_parameters(sql)
+    }
+    alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
+    # Decide on filename
+    sql_hash = hashlib.sha256(sql.encode("utf-8")).hexdigest()[:6]
+    filename = non_alpha_re.sub("-", sql.lower()[:30]) + sql_hash
+
+    filename_plus_ext = filename + "." + format
+
+    connection = connections[alias]
+    connection.cursor()  # To initialize connection
+    cursor = connection.create_cursor(name="c" + filename.replace("-", "_"))
+
+    csvfile = StringIO()
+    csvwriter = csv.writer(
+        csvfile,
+        dialect={
+            "csv": csv.excel,
+            "tsv": csv.excel_tab,
+        }[format],
+    )
+
+    def read_and_flush():
+        csvfile.seek(0)
+        data = csvfile.read()
+        csvfile.seek(0)
+        csvfile.truncate()
+        return data
+
+    def rows():
+        try:
+            cursor.execute(sql, parameter_values)
+            done_header = False
+            while True:
+                records = cursor.fetchmany(size=2000)
+                if not done_header:
+                    csvwriter.writerow([r.name for r in cursor.description])
+                    yield read_and_flush()
+                    done_header = True
+                if not records:
+                    break
+                for record in records:
+                    csvwriter.writerow(record)
+                    yield read_and_flush()
+        finally:
+            cursor.close()
+
+    response = StreamingHttpResponse(
+        rows(),
+        content_type={
+            "csv": "text/csv",
+            "tsv": "text/tab-separated-values",
+        }[format],
+    )
+    response["Content-Disposition"] = 'attachment; filename="' + filename_plus_ext + '"'
+    return response

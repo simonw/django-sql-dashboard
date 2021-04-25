@@ -26,7 +26,7 @@
     {% endfor %}
   </div>
 {% endif %}
-<form action="" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
+<form action="{{ request.path }}" method="{% if saved_dashboard %}GET{% else %}POST{% endif %}">
   {% if not saved_dashboard %}{% csrf_token %}{% endif %}
   {% if parameter_values %}
     <h3>Query parameters</h3>

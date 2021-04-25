@@ -1,4 +1,4 @@
-{% load django_sql_dashboard %}<div class="query-results">
+{% load django_sql_dashboard %}<div class="query-results" id="query-results-{{ result.index }}">
   {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
     name="sql"
     rows="{{ result.textarea_rows }}"
@@ -10,7 +10,27 @@
       value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
     />
   </p>{% endif %}
-  {% if result.truncated %}Results were truncated{% endif %}
+  {% if result.truncated %}
+    <p class="results-truncated">
+      Results were truncated
+      {% if user_can_export_data %}
+        <input
+          class="btn"
+          style="font-size: 0.6rem"
+          type="submit"
+          name="export_csv_{{ result.index }}"
+          value="Export all as CSV"
+        />
+        <input
+          class="btn"
+          style="font-size: 0.6rem"
+          type="submit"
+          name="export_tsv_{{ result.index }}"
+          value="Export all as TSV"
+        />
+      {% endif %}
+    </p>
+  {% endif %}
   {% if result.error %}
   <p style="background-color: pink; padding: 1em; margin: 1em 0">
     {{ result.error }}
@@ -34,8 +54,24 @@
       {% endfor %}
     </tbody>
   </table>
-  <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy data</summary>
+  <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy and export data</summary>
     <textarea id="copyable-{{ result.index }}" style="height: 10em">{{ result|sql_dashboard_tsv }}</textarea>
+    {% if user_can_export_data %}
+      <div class="export-buttons">
+        <input
+          class="btn"
+          type="submit"
+          name="export_csv_{{ result.index }}"
+          value="Export all as CSV"
+        />
+        <input
+          class="btn"
+          type="submit"
+          name="export_tsv_{{ result.index }}"
+          value="Export all as TSV"
+        />
+      </div>
+    {% endif %}
   </details>
   {% if not saved_dashboard %}<p>
     <input
@@ -66,8 +102,6 @@
     var p = document.createElement('p');
     p.style.marginTop = '0.2em';
     ta.insertAdjacentElement("afterend", p);
-    console.log(button);
-    console.log(ta);
     p.insertAdjacentElement("afterbegin", button);
   })();
   </script>

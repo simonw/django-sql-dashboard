@@ -1,5 +1,6 @@
 from urllib.parse import parse_qsl
 
+import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
 
@@ -87,6 +88,29 @@ def test_default_widget_column_count_links(admin_client, dashboard_db):
         ' as results group by "id" order by n desc'
     )
     assert bits["label"] == "LABEL"
+
+
+@pytest.mark.parametrize(
+    "sql,should_have_count_links",
+    (
+        ("SELECT 1 AS id, 2 AS id", False),
+        ("SELECT 1 AS id, 2 AS id2", True),
+    ),
+)
+def test_default_widget_no_count_links_for_ambiguous_columns(
+    admin_client, dashboard_db, sql, should_have_count_links
+):
+    response = admin_client.post(
+        "/dashboard/",
+        {"sql": sql},
+        follow=True,
+    )
+    soup = BeautifulSoup(response.content, "html5lib")
+    th_links = soup.select("thead th a")
+    if should_have_count_links:
+        assert len(th_links)
+    else:
+        assert not len(th_links)
 
 
 def test_big_number_widget(admin_client, dashboard_db):

@@ -19,8 +19,8 @@
   <table>
     <thead>
       <tr>
-        {% for column in result.description %}
-        <th alt="{{ column }}">{{ column.name }}{% if user_can_execute_sql %} [<a href="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode  %}select "{{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}{{ result.extra_qs }}">count</a>]{% endif %}</th>
+        {% for column in result.column_details %}
+          <th alt="{{ column.name }}">{{ column.name }}{% if user_can_execute_sql and column.is_unambiguous %} [<a href="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode  %}select "{{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}{{ result.extra_qs }}">count</a>]{% endif %}</th>
         {% endfor %}
       </tr>
     </thead>

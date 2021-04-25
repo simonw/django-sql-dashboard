@@ -69,6 +69,7 @@ Within your custom template you will have access to a template variable called `
 - `row_lists` - a list of rows, where each row is a list of the values in that row
 - `description` - the psycopg2 cursor description
 - `columns` - a list of string column names
+- `column_details` - a list of `{"name": column_name, "is_unambiguous": True or False}` dictionaries - `is_unambiguous` is `False` if multiple columns of the same name are returned by this query
 - `truncated` - boolean, specifying whether the results were truncated (at 100 items) or not
 - `extra_qs` - extra parameters for the page encoded as a query string fragment - so if the page was loaded with `state_id=5` then `extra_qs` would be `&state_id=5`. You can use this to assemble links to further queries, like the "Count" column links in the default table view.
 - `duration_ms` - how long the query took, in floating point milliseconds

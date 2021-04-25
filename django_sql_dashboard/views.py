@@ -119,6 +119,7 @@ def _dashboard_index(
                 "row_lists": [],
                 "description": [],
                 "columns": [],
+                "column_details": [],
                 "truncated": False,
                 "extra_qs": extra_qs,
                 "error": None,
@@ -163,6 +164,10 @@ def _dashboard_index(
                             "django_sql_dashboard/widgets/" + template_name,
                         )
                     display_rows = displayable_rows(rows[:row_limit])
+                    column_details = [
+                        {"name": column, "is_unambiguous": columns.count(column) == 1}
+                        for column in columns
+                    ]
                     query_results.append(
                         {
                             "index": str(results_index),
@@ -172,6 +177,7 @@ def _dashboard_index(
                             "row_lists": display_rows,
                             "description": cursor.description,
                             "columns": columns,
+                            "column_details": column_details,
                             "truncated": len(rows) == row_limit + 1,
                             "extra_qs": extra_qs,
                             "duration_ms": duration_ms,

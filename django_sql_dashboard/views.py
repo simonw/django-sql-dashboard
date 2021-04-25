@@ -44,6 +44,8 @@ def dashboard_index(request):
         if any(
             k for k in request.POST.keys() if k.startswith("export_")
         ) and request.user.has_perm("django_sql_dashboard.execute_sql"):
+            if not getattr(settings, "DASHBOARD_ENABLE_FULL_EXPORT", None):
+                return HttpResponseForbidden("The export feature is not enabled")
             return export_sql_results(request)
         sqls = request.POST.getlist("sql")
         # Convert ?sql= into signed values and redirect as GET
@@ -228,7 +230,10 @@ def _dashboard_index(
             "description": description,
             "saved_dashboard": saved_dashboard,
             "user_can_execute_sql": user_can_execute_sql,
-            "user_can_export_data": user_can_execute_sql,
+            "user_can_export_data": getattr(
+                settings, "DASHBOARD_ENABLE_FULL_EXPORT", None
+            )
+            and user_can_execute_sql,
             "parameter_values": parameter_values.items(),
             "too_long_so_used_post": too_long_so_used_post,
         },

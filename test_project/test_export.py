@@ -1,4 +1,17 @@
-def test_export_csv(admin_client, dashboard_db):
+def test_export_requires_setting(admin_client, dashboard_db):
+    for key in ("export_csv_0", "export_tsv_0"):
+        response = admin_client.post(
+            "/dashboard/",
+            {
+                "sql": "SELECT 'hello' as label, * FROM generate_series(0, 10000)",
+                key: "1",
+            },
+        )
+        assert response.status_code == 403
+
+
+def test_export_csv(admin_client, dashboard_db, settings):
+    settings.DASHBOARD_ENABLE_FULL_EXPORT = True
     response = admin_client.post(
         "/dashboard/",
         {
@@ -19,7 +32,8 @@ def test_export_csv(admin_client, dashboard_db):
     assert content_disposition.endswith('.csv"')
 
 
-def test_export_tsv(admin_client, dashboard_db):
+def test_export_tsv(admin_client, dashboard_db, settings):
+    settings.DASHBOARD_ENABLE_FULL_EXPORT = True
     response = admin_client.post(
         "/dashboard/",
         {

@@ -74,6 +74,7 @@
     {% for table in available_tables %}
       <li><a href="?sql={% filter sign_sql|urlencode %}select count(*) from {{ table }}{% endfilter %}&sql={% filter sign_sql|urlencode %}select * from {{ table }}{% endfilter %}">{{ table }}</a></li>
     {% endfor %}
+  </ul>
 {% endif %}
 
 <script>

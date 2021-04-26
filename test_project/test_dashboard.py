@@ -4,17 +4,7 @@ import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
 
-from django_sql_dashboard.models import Dashboard
 from django_sql_dashboard.utils import SQL_SALT, is_valid_base64_json, sign_sql
-
-
-@pytest.fixture
-def saved_dashboard(dashboard_db):
-    dashboard = Dashboard.objects.create(
-        slug="test", title="Test dashboard", view_policy="public"
-    )
-    dashboard.queries.create(sql="select 11 + 33")
-    dashboard.queries.create(sql="select 22 + 55")
 
 
 def test_dashboard_submit_sql(admin_client, dashboard_db):

@@ -13,7 +13,7 @@
   {% if result.truncated %}
     <p class="results-truncated">
       Results were truncated
-      {% if user_can_export_data %}
+      {% if user_can_export_data and not saved_dashboard %}
         <input
           class="btn"
           style="font-size: 0.6rem"
@@ -56,7 +56,7 @@
   </table>
   <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy and export data</summary>
     <textarea id="copyable-{{ result.index }}" style="height: 10em">{{ result|sql_dashboard_tsv }}</textarea>
-    {% if user_can_export_data %}
+    {% if user_can_export_data and not saved_dashboard %}
       <div class="export-buttons">
         <input
           class="btn"

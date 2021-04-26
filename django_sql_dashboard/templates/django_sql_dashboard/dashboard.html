@@ -76,4 +76,53 @@
     {% endfor %}
 {% endif %}
 
+<script>
+var svgCopyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+
+Array.from(document.querySelectorAll("pre.json")).forEach((pre) => {
+  var svg = document.createElement("div");
+  svg.innerHTML = svgCopyIcon;
+  svg = svg.querySelector("*");
+  pre.style.position = 'relative';
+  svg.style.position = 'absolute';
+  svg.style.top = 0;
+  svg.style.right = 0;
+  svg.style.width = '14px';
+  svg.style.cursor = 'pointer';
+  svg.addEventListener('click', function() {
+    var input = document.createElement('input');
+    input.setAttribute('type', 'text');
+    input.style.position = 'absolute';
+    input.style.opacity = 0;
+    // Everything up to the last ] or }, to avoid broken
+    // JSON if the 'copied' text is still present
+    var json = pre.innerText.match(/^(.*[\]\}].*?$)$/gms)[0]
+    input.value = JSON.stringify(JSON.parse(json));
+    pre.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    input.parentNode.removeChild(input);
+    // Show a 'copied' message then fade it out
+    var copied = document.createElement('span');
+    copied.innerHTML = 'Copied';
+    copied.style.position = 'absolute';
+    copied.style.top = '3ex';
+    copied.style.right = 0;
+    copied.style.color = '#666';
+    copied.style.fontFamily = 'Helvetica, sans-serif';
+    copied.style.fontSize = '0.8em';
+    copied.style.fontWeight = 'bold';
+    copied.style.transition = 'opacity 1s';
+    pre.appendChild(copied);
+    setTimeout(() => {
+      copied.parentNode.removeChild(copied);
+    }, 1500);
+    setTimeout(() => {
+      copied.style.opacity = 0;
+    }, 500);
+  });
+  pre.appendChild(svg);
+});
+</script>
+
 {% endblock %}

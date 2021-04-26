@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
+
 from django_sql_dashboard.models import Dashboard
 
 
@@ -17,6 +18,7 @@ def execute_sql_permission():
         content_type__model="dashboard",
         codename="execute_sql",
     )
+
 
 @pytest.fixture
 def saved_dashboard(dashboard_db):

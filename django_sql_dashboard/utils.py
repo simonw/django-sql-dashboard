@@ -1,6 +1,7 @@
 import binascii
 import json
 import urllib.parse
+import re
 from collections import namedtuple
 
 from django.core import signing
@@ -57,20 +58,18 @@ def displayable_rows(rows):
     return fixed
 
 
-class _CaptureDict:
-    def __init__(self):
-        self.accessed = []
-
-    def __getitem__(self, key):
-        if key not in self.accessed:
-            self.accessed.append(key)
-        return ""
+_named_parameters_re = re.compile(r"\%\(([^\)]+)\)s")
 
 
 def extract_named_parameters(sql):
-    capture = _CaptureDict()
-    sql % capture
-    return capture.accessed
+    params = _named_parameters_re.findall(sql)
+    # Validation step: after removing params, are there
+    # any single `%` symbols that will confuse psycopg2?
+    without_params = _named_parameters_re.sub("", sql)
+    without_double_percents = without_params.replace("%%", "")
+    if "%" in without_double_percents:
+        raise ValueError(r"Found a single % character")
+    return params
 
 
 def check_for_base64_upgrade(queries):

@@ -90,6 +90,10 @@ def test_many_long_column_names(admin_client, dashboard_db):
             "select 'foo' like 'f%'",
             r"Invalid query - try escaping single '%' as double '%%'",
         ),
+        (
+            "select '% completed'",
+            r"Invalid query - try escaping single '%' as double '%%'",
+        ),
     ),
 )
 def test_dashboard_sql_errors(admin_client, sql, expected_error):

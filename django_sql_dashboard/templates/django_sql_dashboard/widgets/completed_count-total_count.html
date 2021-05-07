@@ -1,7 +1,7 @@
 <div class="query-results">
   {% for row in result.rows %}
-  <div class="completed-count-total-count" style="width: 60%; background-color: #efefef; height: 3em;">
-    <div style="background-color: blue; height: 3em; width: {% widthratio row.completed_count row.total_count 100 %}%">&nbsp;</div>
+  <div class="completed-count-total-count">
+    <div class="completed-count-total-count-bar" style="width: {% widthratio row.completed_count row.total_count 100 %}%">&nbsp;</div>
   </div>
   <h2>{{ row.completed_count }} / {{ row.total_count }}: {% widthratio row.completed_count row.total_count 100 %}%</h2>
   {% endfor %}

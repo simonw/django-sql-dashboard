@@ -55,6 +55,25 @@ def test_default_widget_pretty_prints_json(admin_client, dashboard_db):
     )
 
 
+@pytest.mark.parametrize(
+    "sql,expected",
+    (
+        ("SELECT * FROM generate_series(0, 5)", "6 rows</p>"),
+        ("SELECT 'hello'", "1 row</p>"),
+        ("SELECT * FROM generate_series(0, 1000)", "Results were truncated"),
+    ),
+)
+def test_default_widget_shows_row_count_or_truncated_message(
+    admin_client, dashboard_db, sql, expected
+):
+    response = admin_client.post(
+        "/dashboard/",
+        {"sql": sql},
+        follow=True,
+    )
+    assert expected in response.content.decode("utf-8")
+
+
 def test_default_widget_column_count_links(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",

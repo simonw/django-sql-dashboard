@@ -30,6 +30,8 @@
         />
       {% endif %}
     </p>
+  {% else %}
+    <p>{{ result.row_lists|length }} row{{ result.row_lists|length|pluralize }}</p>
   {% endif %}
   {% if result.error %}
   <p style="background-color: pink; padding: 1em; margin: 1em 0">

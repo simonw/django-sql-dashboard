@@ -26,10 +26,6 @@ from .utils import (
     unsign_sql,
 )
 
-ERROR_TEMPLATES = [
-    "django_sql_dashboard/widgets/error.html",
-    "django_sql_dashboard/widgets/default.html",
-]
 
 # https://github.com/simonw/django-sql-dashboard/issues/58
 MAX_REDIRECT_LENGTH = 1800
@@ -94,6 +90,7 @@ def _dashboard_index(
     saved_dashboard=False,
     cache_control_private=False,
     too_long_so_used_post=False,
+    template="django_sql_dashboard/dashboard.html",
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
@@ -149,7 +146,7 @@ def _dashboard_index(
                 "truncated": False,
                 "extra_qs": extra_qs,
                 "error": None,
-                "templates": ERROR_TEMPLATES,
+                "templates": ["django_sql_dashboard/widgets/error.html"],
             }
             if parameter_error:
                 query_results.append(
@@ -220,7 +217,7 @@ def _dashboard_index(
     user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
     response = render(
         request,
-        "django_sql_dashboard/dashboard.html",
+        template,
         {
             "title": title or "SQL Dashboard",
             "html_title": title or html_title,
@@ -285,6 +282,7 @@ def dashboard(request, slug):
         description=dashboard.description,
         saved_dashboard=True,
         cache_control_private=cache_control_private,
+        template="django_sql_dashboard/saved_dashboard.html"
     )
 
 

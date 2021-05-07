@@ -1,0 +1,32 @@
+{% extends "django_sql_dashboard/base.html" %}
+{% load django_sql_dashboard %}
+
+{% block title %}{{ html_title }}{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+{% if description %}
+  <p>{{ description }}</p>
+{% endif %}
+
+<form action="{{ request.path }}" method="GET">
+  {% if parameter_values %}
+    <h3>Query parameters</h3>
+    <div class="query-parameters">
+    {% for name, value in parameter_values %}
+        <label for="qp{{ forloop.counter }}">{{ name }}</label>
+        <input type="text" id="qp{{ forloop.counter }}" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    </div>
+    <input
+      class="btn"
+      type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+    />
+  {% endif %}
+  {% for result in query_results %}
+    {% include result.templates with result=result %}
+  {% endfor %}
+</form>
+{% include "django_sql_dashboard/_script.html" %}
+{% endblock %}

@@ -178,3 +178,14 @@ def test_bar_chart_widget(admin_client, dashboard_db):
         '{"bar_quantity": 3, "bar_label": "three"}]</script>'
     ) in html
     assert '$schema: "https://vega.github.io/schema/vega-lite/v5.json"' in html
+
+
+def test_progress_bar_widget(admin_client, dashboard_db):
+    response = admin_client.post(
+        "/dashboard/",
+        {"sql": "select 100 as total_count, 72 as completed_count"},
+        follow=True,
+    )
+    html = response.content.decode("utf-8")
+    assert "<h2>72 / 100: 72%</h2>" in html
+    assert 'width: 72%">&nbsp;</div>' in html

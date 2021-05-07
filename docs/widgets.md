@@ -34,6 +34,14 @@ If you want to display the results as a big number accompanied by a label, you c
 select 'Number of states' as label, count(*) as big_number from states;
 ```
 
+## total_count, completed_count
+
+To display a progress bar, return columns `total_count` and `completed_count`.
+
+```sql
+select 1203 as total_count, 755 as completed_count;
+```
+
 ## markdown
 
 Return a single column called `markdown` to render the contents as Markdown, for example:

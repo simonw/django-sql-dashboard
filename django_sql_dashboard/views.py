@@ -138,13 +138,31 @@ def _dashboard_index(
     with connection.cursor() as tables_cursor:
         tables_cursor.execute(
             """
-            SELECT table_name
-            FROM   information_schema.table_privileges 
-            WHERE  grantee = current_user and privilege_type = 'SELECT'
-            ORDER BY table_name
+            with visible_tables as (
+              select table_name
+              from information_schema.tables
+              where table_schema = 'public'
+              order by table_name
+            )
+            select
+              information_schema.columns.table_name,
+              string_agg(column_name, ', ' order by ordinal_position) as columns
+            from
+              information_schema.columns
+            join
+              visible_tables on
+              information_schema.columns.table_name = visible_tables.table_name
+            where
+              information_schema.columns.table_schema = 'public'
+            group by
+              information_schema.columns.table_name
+            order by
+              information_schema.columns.table_name
         """
         )
-        available_tables = [t[0] for t in tables_cursor.fetchall()]
+        available_tables = [
+            {"name": t[0], "columns": t[1]} for t in tables_cursor.fetchall()
+        ]
 
     parameters = []
     sql_query_parameter_errors = []

@@ -82,7 +82,8 @@
 <h2>Available tables</h2>
 <ul style="column-count: 2">
   {% for table in available_tables %}
-    <li><a href="?sql={% filter sign_sql|urlencode %}select count(*) from {{ table }}{% endfilter %}&sql={% filter sign_sql|urlencode %}select * from {{ table }}{% endfilter %}">{{ table }}</a></li>
+    <li><a href="?sql={% filter sign_sql|urlencode %}select count(*) from {{ table.name }}{% endfilter %}&sql={% filter sign_sql|urlencode %}select * from {{ table.name }}{% endfilter %}">{{ table.name }}</a>
+    <br><span style="text-indent: 1em; color: #666; font-size: 0.8em">{{ table.columns }}</span></li>
   {% endfor %}
 </ul>
 

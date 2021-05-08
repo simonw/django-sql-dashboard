@@ -3,6 +3,7 @@ import urllib.parse
 import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
+from django.db import connections
 
 from django_sql_dashboard.utils import SQL_SALT, is_valid_base64_json, sign_sql
 
@@ -161,3 +162,24 @@ def test_saved_dashboard_errors_sql_not_in_textarea(admin_client, saved_dashboar
     response = admin_client.get("/dashboard/test/")
     html = response.content.decode("utf-8")
     assert '<pre class="sql">this is bad</pre>' in html
+
+
+def test_dashboard_show_available_tables(admin_client, dashboard_db):
+    response = admin_client.get("/dashboard/")
+    soup = BeautifulSoup(response.content, "html5lib")
+    lis = soup.find("ul").findAll("li")
+    details = [
+        {"table": li.find("a").text, "columns": li.find("span").text}
+        for li in lis
+        if li.find("a").text.startswith("django_sql_dashboard")
+    ]
+    assert details == [
+        {
+            "table": "django_sql_dashboard_dashboard",
+            "columns": "id, slug, title, description, created_at, edit_group_id, edit_policy, owned_by_id, view_group_id, view_policy",
+        },
+        {
+            "table": "django_sql_dashboard_dashboardquery",
+            "columns": "id, sql, dashboard_id, _order",
+        },
+    ]

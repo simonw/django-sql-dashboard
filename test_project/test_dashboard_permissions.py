@@ -144,3 +144,16 @@ def test_saved_dashboard_view_permissions(
             assert response.status_code == 403
         if should_cache_control_private:
             assert response["cache-control"] == "private"
+
+
+def test_unlisted_dashboard_has_meta_robots(client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="unlisted", view_policy="unlisted")
+    dashboard.queries.create(sql="select 11 + 34")
+    response = client.get("/dashboard/unlisted/")
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex">' in response.content
+    dashboard.view_policy = "public"
+    dashboard.save()
+    response2 = client.get("/dashboard/unlisted/")
+    assert response2.status_code == 200
+    assert b'<meta name="robots" content="noindex">' not in response2.content

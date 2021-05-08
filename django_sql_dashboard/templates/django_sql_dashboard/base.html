@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}{% endblock %}</title>
     <style>{% include "django_sql_dashboard/_css.html" %}</style>
+    {% block extra_head %}{% endblock %}
   </head>
   <body>
     <main>

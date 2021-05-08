@@ -1,0 +1,15 @@
+<div class="query-results">
+  {% block widget_results %}{% endblock %}
+  <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
+  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
+  name="sql"
+>{{ result.sql|default:"" }}</textarea>{% endif %}
+{% if not saved_dashboard %}<p>
+  <input
+    class="btn"
+    type="submit"
+    value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+  />
+</p>{% endif %}
+</details>
+</div>

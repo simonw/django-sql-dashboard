@@ -83,4 +83,21 @@ Within your custom template you will have access to a template variable called `
 - `duration_ms` - how long the query took, in floating point milliseconds
 - `templates` - a list of templates that were considered for rendering this widget
 
-You can find examples of widget templates in the [templates/django_sql_dashboard/widgets](https://github.com/simonw/django-sql-dashboard/tree/main/django_sql_dashboard/templates/django_sql_dashboard/widgets) directory.
+The easiest way to define your custom widget template is to extend the `django_sql_dashboard/widgets/_base_widget.html` base template.
+
+Here is the full implementation of the `big_number`, `label` widget that is included with Django SQL Dashboard, in the `django_sql_dashboard/widgets/big_number-label.html` template file:
+
+```html+django
+{% extends "django_sql_dashboard/widgets/_base_widget.html" %}
+
+{% block widget_results %}
+  {% for row in result.rows %}
+    <div class="big-number">
+      <p><strong>{{ row.label }}</strong></p>
+      <h1>{{ row.big_number }}</h1>
+    </div>
+  {% endfor %}
+{% endblock %}
+```
+
+You can find more examples of widget templates in the [templates/django_sql_dashboard/widgets](https://github.com/simonw/django-sql-dashboard/tree/main/django_sql_dashboard/templates/django_sql_dashboard/widgets) directory.

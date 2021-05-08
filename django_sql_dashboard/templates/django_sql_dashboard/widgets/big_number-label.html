@@ -1,18 +1,10 @@
-<div class="query-results">
+{% extends "django_sql_dashboard/widgets/_base_widget.html" %}
+
+{% block widget_results %}
   {% for row in result.rows %}
-  <p>{{ row.label }}</p>
-  <h1>{{ row.big_number }}</h1>
+    <div class="big-number">
+      <p><strong>{{ row.label }}</strong></p>
+      <h1>{{ row.big_number }}</h1>
+    </div>
   {% endfor %}
-  <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
-  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
-  name="sql"
->{{ result.sql|default:"" }}</textarea>{% endif %}
-{% if not saved_dashboard %}<p>
-  <input
-    class="btn"
-    type="submit"
-    value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-  />
-</p>{% endif %}
-</details>
-</div>
+{% endblock %}

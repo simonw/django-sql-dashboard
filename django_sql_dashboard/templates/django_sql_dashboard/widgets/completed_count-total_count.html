@@ -1,20 +1,10 @@
-<div class="query-results">
+{% extends "django_sql_dashboard/widgets/_base_widget.html" %}
+
+{% block widget_results %}
   {% for row in result.rows %}
-  <div class="completed-count-total-count">
-    <div class="completed-count-total-count-bar" style="width: {% widthratio row.completed_count row.total_count 100 %}%">&nbsp;</div>
-  </div>
-  <h2>{{ row.completed_count }} / {{ row.total_count }}: {% widthratio row.completed_count row.total_count 100 %}%</h2>
+    <div class="completed-count-total-count">
+      <div class="completed-count-total-count-bar" style="width: {% widthratio row.completed_count row.total_count 100 %}%">&nbsp;</div>
+    </div>
+    <h2>{{ row.completed_count }} / {{ row.total_count }}: {% widthratio row.completed_count row.total_count 100 %}%</h2>
   {% endfor %}
-  <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
-  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
-  name="sql"
->{{ result.sql|default:"" }}</textarea>{% endif %}
-{% if not saved_dashboard %}<p>
-  <input
-    class="btn"
-    type="submit"
-    value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-  />
-</p>{% endif %}
-</details>
-</div>
+{% endblock %}

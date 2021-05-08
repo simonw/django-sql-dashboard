@@ -61,6 +61,10 @@ function setupSaveDashboardForm() {
   if (!titleInput) {
     return;
   }
+  // Scroll to form if there are errors
+  if (document.querySelector('.errorlist')) {
+    document.querySelector('#save-dashboard').scrollIntoView();
+  }
   // Hide view group / edit group unless policies selected
   var viewGroupContainer = document.querySelector(
     "#id__save-view_group"

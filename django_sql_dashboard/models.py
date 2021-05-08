@@ -53,7 +53,7 @@ class Dashboard(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="can_view_dashboards",
-        help_text="For group view policy",
+        help_text="Group that can view, for 'Users in group' policy",
     )
     edit_group = models.ForeignKey(
         "auth.Group",
@@ -61,7 +61,7 @@ class Dashboard(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="can_edit_dashboards",
-        help_text="For edit group policy",
+        help_text="Group that can edit, for 'Users in group' policy",
     )
 
     def __str__(self):

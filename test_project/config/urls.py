@@ -1,11 +1,9 @@
 from django.contrib import admin
-from django.http import HttpResponse
-from django.urls import path
+from django.urls import path, include
 
-from django_sql_dashboard.views import dashboard, dashboard_index
+import django_sql_dashboard
 
 urlpatterns = [
-    path("dashboard/", dashboard_index, name="django_sql_dashboard-index"),
-    path("dashboard/<slug>/", dashboard),
+    path("dashboard/", include(django_sql_dashboard.urls)),
     path("admin/", admin.site.urls),
 ]

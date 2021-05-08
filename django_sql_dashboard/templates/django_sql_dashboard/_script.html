@@ -5,36 +5,36 @@ Array.from(document.querySelectorAll("pre.json")).forEach((pre) => {
   var svg = document.createElement("div");
   svg.innerHTML = svgCopyIcon;
   svg = svg.querySelector("*");
-  pre.style.position = 'relative';
-  svg.style.position = 'absolute';
+  pre.style.position = "relative";
+  svg.style.position = "absolute";
   svg.style.top = 0;
   svg.style.right = 0;
-  svg.style.width = '14px';
-  svg.style.cursor = 'pointer';
-  svg.addEventListener('click', function() {
-    var input = document.createElement('input');
-    input.setAttribute('type', 'text');
-    input.style.position = 'absolute';
+  svg.style.width = "14px";
+  svg.style.cursor = "pointer";
+  svg.addEventListener("click", function () {
+    var input = document.createElement("input");
+    input.setAttribute("type", "text");
+    input.style.position = "absolute";
     input.style.opacity = 0;
     // Everything up to the last ] or }, to avoid broken
     // JSON if the 'copied' text is still present
-    var json = pre.innerText.match(/^(.*[\]\}].*?$)$/gms)[0]
+    var json = pre.innerText.match(/^(.*[\]\}].*?$)$/gms)[0];
     input.value = JSON.stringify(JSON.parse(json));
     pre.appendChild(input);
     input.select();
     document.execCommand("copy");
     input.parentNode.removeChild(input);
     // Show a 'copied' message then fade it out
-    var copied = document.createElement('span');
-    copied.innerHTML = 'Copied';
-    copied.style.position = 'absolute';
-    copied.style.top = '3ex';
+    var copied = document.createElement("span");
+    copied.innerHTML = "Copied";
+    copied.style.position = "absolute";
+    copied.style.top = "3ex";
     copied.style.right = 0;
-    copied.style.color = '#666';
-    copied.style.fontFamily = 'Helvetica, sans-serif';
-    copied.style.fontSize = '0.8em';
-    copied.style.fontWeight = 'bold';
-    copied.style.transition = 'opacity 1s';
+    copied.style.color = "#666";
+    copied.style.fontFamily = "Helvetica, sans-serif";
+    copied.style.fontSize = "0.8em";
+    copied.style.fontWeight = "bold";
+    copied.style.transition = "opacity 1s";
     pre.appendChild(copied);
     setTimeout(() => {
       copied.parentNode.removeChild(copied);
@@ -45,4 +45,68 @@ Array.from(document.querySelectorAll("pre.json")).forEach((pre) => {
   });
   pre.appendChild(svg);
 });
+
+function slugify(s) {
+  return s
+    .toLowerCase()
+    .replace(/[^-\w\s]/g, "") // remove non-alphanumerics
+    .trim()
+    .replace(/[-\s]+/g, "-") // spaces to hyphens
+    .replace(/-+$/g, ""); // trim trailing hyphens
+}
+
+function setupSaveDashboardForm() {
+  var titleInput = document.querySelector("#id__save-title");
+  var slugInput = document.querySelector("#id__save-slug");
+  if (!titleInput) {
+    return;
+  }
+  // Hide view group / edit group unless policies selected
+  var viewGroupContainer = document.querySelector(
+    "#id__save-view_group"
+  ).parentElement;
+  var editGroupContainer = document.querySelector(
+    "#id__save-edit_group"
+  ).parentElement;
+  var viewPolicySelect = document.querySelector(
+    "#id__save-view_policy"
+  );
+  var editPolicySelect = document.querySelector(
+    "#id__save-edit_policy"
+  );
+  const viewChange = () => {
+    if (viewPolicySelect.value == 'group') {
+      viewGroupContainer.style.display = 'block';
+    } else {
+      viewGroupContainer.style.display = 'none';
+    }
+  }
+  const editChange = () => {
+    if (editPolicySelect.value == 'group') {
+      editGroupContainer.style.display = 'block';
+    } else {
+      editGroupContainer.style.display = 'none';
+    }
+  }
+  viewPolicySelect.addEventListener('change', viewChange);
+  viewChange();
+  editPolicySelect.addEventListener('change', editChange);
+  editChange();
+
+  // Auto-fill slug from title
+  let slugManuallyEdited = false;
+  slugInput.addEventListener("change", () => {
+    slugManuallyEdited = !!slugInput.value;
+  });
+  function titleEdited() {
+    if (slugManuallyEdited) {
+      return;
+    }
+    slugInput.value = slugify(titleInput.value);
+  }
+  titleInput.addEventListener("change", titleEdited);
+  titleInput.addEventListener("focus", titleEdited);
+  titleInput.addEventListener("keyup", titleEdited);
+}
+window.addEventListener("load", setupSaveDashboardForm);
 </script>

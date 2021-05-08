@@ -1,7 +1,7 @@
 import binascii
 import json
-import urllib.parse
 import re
+import urllib.parse
 from collections import namedtuple
 
 from django.core import signing

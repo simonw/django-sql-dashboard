@@ -7,9 +7,9 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
-from django.core import signing
 from django.db import connections
 from django.db.utils import ProgrammingError
+from django.forms import CharField, ModelForm, Textarea
 from django.http.response import (
     HttpResponseForbidden,
     HttpResponseRedirect,
@@ -26,15 +26,38 @@ from .utils import (
     unsign_sql,
 )
 
-
 # https://github.com/simonw/django-sql-dashboard/issues/58
 MAX_REDIRECT_LENGTH = 1800
+
+
+class SaveDashboardForm(ModelForm):
+    slug = CharField(required=False, label="URL", help_text='For example "daily-stats"')
+
+    class Meta:
+        model = Dashboard
+        fields = (
+            "title",
+            "slug",
+            "description",
+            "view_policy",
+            "view_group",
+            "edit_policy",
+            "edit_group",
+        )
+        widgets = {
+            "description": Textarea(
+                attrs={
+                    "placeholder": "Optional description, shown at the top of the dashboard page"
+                }
+            )
+        }
 
 
 @permission_required("django_sql_dashboard.execute_sql")
 def dashboard_index(request):
     sql_queries = []
-    too_long_so_used_post = False
+    too_long_so_use_post = False
+    save_form = SaveDashboardForm(prefix="_save")
     if request.method == "POST":
         # Is this an export?
         if any(
@@ -43,7 +66,21 @@ def dashboard_index(request):
             if not getattr(settings, "DASHBOARD_ENABLE_FULL_EXPORT", None):
                 return HttpResponseForbidden("The export feature is not enabled")
             return export_sql_results(request)
-        sqls = request.POST.getlist("sql")
+        sqls = [sql for sql in request.POST.getlist("sql") if sql.strip()]
+
+        saving = False
+        # How about a save?
+        if request.POST.get("_save-slug"):
+            save_form = SaveDashboardForm(request.POST, prefix="_save")
+            saving = True
+            if save_form.is_valid():
+                dashboard = save_form.save(commit=False)
+                dashboard.owned_by = request.user
+                dashboard.save()
+                for sql in sqls:
+                    dashboard.queries.create(sql=sql)
+                return HttpResponseRedirect(dashboard.get_absolute_url())
+
         # Convert ?sql= into signed values and redirect as GET
         other_pairs = [
             (key, value)
@@ -57,11 +94,11 @@ def dashboard_index(request):
         params.update(other_pairs)
         redirect_path = request.path + "?" + urlencode(params, doseq=True)
         # Is this short enough for us to redirect?
-        if len(redirect_path) < MAX_REDIRECT_LENGTH:
+        too_long_so_use_post = len(redirect_path) > MAX_REDIRECT_LENGTH
+        if not saving and not too_long_so_use_post:
             return HttpResponseRedirect(redirect_path)
         else:
             sql_queries = sqls
-            too_long_so_used_post = True
     unverified_sql_queries = []
     for signed_sql in request.GET.getlist("sql"):
         sql, signature_verified = unsign_sql(signed_sql)
@@ -77,7 +114,8 @@ def dashboard_index(request):
         request,
         sql_queries,
         unverified_sql_queries=unverified_sql_queries,
-        too_long_so_used_post=too_long_so_used_post,
+        too_long_so_use_post=too_long_so_use_post,
+        extra_context={"save_form": save_form},
     )
 
 
@@ -87,10 +125,11 @@ def _dashboard_index(
     unverified_sql_queries=None,
     title=None,
     description=None,
-    saved_dashboard=False,
+    dashboard=None,
     cache_control_private=False,
-    too_long_so_used_post=False,
+    too_long_so_use_post=False,
     template="django_sql_dashboard/dashboard.html",
+    extra_context=None,
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
@@ -215,25 +254,30 @@ def _dashboard_index(
         html_title = "SQL: " + " [,] ".join(sql_queries)
 
     user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
+
+    context = {
+        "title": title or "SQL Dashboard",
+        "html_title": title or html_title,
+        "query_results": query_results,
+        "unverified_sql_queries": unverified_sql_queries,
+        "available_tables": available_tables,
+        "description": description,
+        "dashboard": dashboard,
+        "saved_dashboard": bool(dashboard),
+        "user_can_execute_sql": user_can_execute_sql,
+        "user_can_export_data": getattr(settings, "DASHBOARD_ENABLE_FULL_EXPORT", None)
+        and user_can_execute_sql,
+        "parameter_values": parameter_values.items(),
+        "too_long_so_use_post": too_long_so_use_post,
+    }
+
+    if extra_context:
+        context.update(extra_context)
+
     response = render(
         request,
         template,
-        {
-            "title": title or "SQL Dashboard",
-            "html_title": title or html_title,
-            "query_results": query_results,
-            "unverified_sql_queries": unverified_sql_queries,
-            "available_tables": available_tables,
-            "description": description,
-            "saved_dashboard": saved_dashboard,
-            "user_can_execute_sql": user_can_execute_sql,
-            "user_can_export_data": getattr(
-                settings, "DASHBOARD_ENABLE_FULL_EXPORT", None
-            )
-            and user_can_execute_sql,
-            "parameter_values": parameter_values.items(),
-            "too_long_so_used_post": too_long_so_used_post,
-        },
+        context,
     )
     if cache_control_private:
         response["cache-control"] = "private"
@@ -280,7 +324,7 @@ def dashboard(request, slug):
         sql_queries=[query.sql for query in dashboard.queries.all()],
         title=dashboard.title,
         description=dashboard.description,
-        saved_dashboard=True,
+        dashboard=dashboard,
         cache_control_private=cache_control_private,
         template="django_sql_dashboard/saved_dashboard.html",
     )

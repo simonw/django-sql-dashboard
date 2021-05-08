@@ -4,9 +4,10 @@
 {% block title %}{{ html_title }}{% endblock %}
 
 {% block content %}
-<h1>{{ title }}</h1>
-{% if description %}
-  <p>{{ description }}</p>
+<p><a href="/dashboard/">Dashboard index</a></p>
+<h1>{% if dashboard.title %}{{ dashboard.title }}{% else %}{{ dashboard.slug }}{% endif %}</h1>
+{% if dashboard.description %}
+  <p>{{ dashboard.description }}</p>
 {% endif %}
 
 <form action="{{ request.path }}" method="GET">

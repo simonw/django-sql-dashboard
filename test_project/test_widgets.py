@@ -134,9 +134,9 @@ def test_big_number_widget(admin_client, dashboard_db):
     html = response.content.decode("utf-8")
     assert (
         '    <div class="big-number">\n'
-        '      <p><strong>Big</strong></p>\n'
-        '      <h1>54005</h1>\n'
-        '    </div>'
+        "      <p><strong>Big</strong></p>\n"
+        "      <h1>54005</h1>\n"
+        "    </div>"
     ) in html
 
 

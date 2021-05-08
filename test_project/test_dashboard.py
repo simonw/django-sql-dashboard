@@ -154,3 +154,10 @@ def test_dashboard_html_title(
         response = admin_client.get(path)
     soup = BeautifulSoup(response.content, "html5lib")
     assert soup.find("title").text == expected_title
+
+
+def test_saved_dashboard_errors_sql_not_in_textarea(admin_client, saved_dashboard):
+    saved_dashboard.queries.create(sql="this is bad")
+    response = admin_client.get("/dashboard/test/")
+    html = response.content.decode("utf-8")
+    assert '<pre class="sql">this is bad</pre>' in html

@@ -27,3 +27,4 @@ def saved_dashboard(dashboard_db):
     )
     dashboard.queries.create(sql="select 11 + 33")
     dashboard.queries.create(sql="select 22 + 55")
+    return dashboard

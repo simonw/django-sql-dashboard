@@ -1,5 +1,9 @@
 <div class="query-results query-error">
-  <textarea name="sql">{{ result.sql }}</textarea>
+  {% if saved_dashboard %}
+    <pre class="sql">{{ result.sql }}</pre>
+  {% else %}
+    <textarea name="sql" rows="{{ result.textarea_rows }}">{{ result.sql }}</textarea>
+  {% endif %}
   <p>
     <input class="btn" type="submit"
       value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}">

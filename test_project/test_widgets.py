@@ -132,7 +132,12 @@ def test_big_number_widget(admin_client, dashboard_db):
         follow=True,
     )
     html = response.content.decode("utf-8")
-    assert "<p>Big</p>\n  <h1>54005</h1>" in html
+    assert (
+        '    <div class="big-number">\n'
+        '      <p><strong>Big</strong></p>\n'
+        '      <h1>54005</h1>\n'
+        '    </div>'
+    ) in html
 
 
 def test_markdown_widget(admin_client, dashboard_db):

@@ -282,7 +282,7 @@ def dashboard(request, slug):
         description=dashboard.description,
         saved_dashboard=True,
         cache_control_private=cache_control_private,
-        template="django_sql_dashboard/saved_dashboard.html"
+        template="django_sql_dashboard/saved_dashboard.html",
     )
 
 

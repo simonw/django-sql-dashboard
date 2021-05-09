@@ -121,7 +121,7 @@ class Dashboard(models.Model):
                 )
             )
             .order_by("-is_owner", "slug")
-        )
+        ).distinct()
 
 
 class DashboardQuery(models.Model):

@@ -251,6 +251,25 @@ def test_get_visible_to_user(
         ), "Expected super user not to be able to see {}".format(dashboard)
 
 
+def test_get_visible_to_user_no_dupes(db):
+    owner = User.objects.create(username="owner", is_staff=True)
+    group = Group.objects.create(name="group")
+    for i in range(3):
+        group.user_set.add(User.objects.create(username="user{}".format(i)))
+    Dashboard.objects.create(
+        owned_by=owner,
+        slug="example",
+        view_policy="public",
+        view_group=group,
+    )
+    dashboards = list(
+        Dashboard.get_visible_to_user(owner).values_list("slug", flat=True)
+    )
+    # This used to return ["example", "example", "example"]
+    # Until I fixed https://github.com/simonw/django-sql-dashboard/issues/90
+    assert dashboards == ["example"]
+
+
 @pytest.mark.parametrize(
     "dashboard,expected,expected_if_staff,expected_if_superuser",
     (

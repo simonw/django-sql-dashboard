@@ -340,3 +340,13 @@ def test_superuser_can_reassign_ownership(client, db):
     user.save()
     response2 = client.get(dashboard.get_edit_url())
     assert b'<input type="text" name="owned_by" value="' in response2.content
+
+
+def test_no_link_to_index_on_saved_dashboard_for_logged_out_user(client, db):
+    dashboard = Dashboard.objects.create(
+        slug="dashboard",
+        owned_by=User.objects.create(username="test", is_staff=True),
+        view_policy="public",
+    )
+    response = client.get(dashboard.get_absolute_url())
+    assert b'<a href="/dashboard/">' not in response.content

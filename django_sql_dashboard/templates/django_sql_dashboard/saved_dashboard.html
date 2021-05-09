@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<p><a href="/dashboard/">Dashboard index</a></p>
+{% if user_can_execute_sql %}<p><a href="/dashboard/">Dashboard index</a></p>{% endif %}
 <h1>{% if dashboard.title %}{{ dashboard.title }}{% else %}{{ dashboard.slug }}{% endif %}</h1>
 {% if dashboard.description %}
   <p>{{ dashboard.description }}</p>

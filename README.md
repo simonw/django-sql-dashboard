@@ -14,6 +14,7 @@ Features include:
 - Safely run read-only one or more SQL queries against your database and view the results in your browser
 - Bookmark queries and share those links with other members of your team
 - Create [saved dashboards](https://django-sql-dashboard.datasette.io/en/latest/saved-dashboards.html) from your queries, with full control over who can view and edit them
+- [Named parameters](https://django-sql-dashboard.datasette.io/en/latest/sql.html#sql-parameters) such as `select * from entries where id = %(id)s` will be turned into form fields, allowing quick creation of interactive dashboards
 - Produce [bar charts](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#bar-label-bar-quantity), [progress bars](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#total-count-completed-count) and more from SQL queries, with the ability to easily create new [custom dashboard widgets](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#custom-widgets) using the Django template system
 - Write SQL queries that safely construct and render [markdown](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#markdown) and [HTML](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#html)
 - Export the full results of SQL queries as downloadable CSV or TSV files

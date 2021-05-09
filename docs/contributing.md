@@ -30,3 +30,15 @@ To generate migrations for model changes:
 ## Code style
 
 This library uses [Black](https://github.com/psf/black) for code formatting.
+
+## Documentation
+
+Documentation for this project uses [MyST](https://myst-parser.readthedocs.io/) - it is written in Markdown and rendered using Sphinx.
+
+To build the documentation locally, run the following:
+
+    cd docs
+    pip install -r requirements.txt
+    make livehtml
+
+This will start a live preview server, using [sphinx-autobuild](https://pypi.org/project/sphinx-autobuild/).

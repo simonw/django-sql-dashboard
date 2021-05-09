@@ -55,7 +55,7 @@ select '# Number of states: ' || count(*) as markdown from states;
 Return a single column called `html` to render the contents directly as HTML. This HTML is filtered using [Bleach](https://github.com/mozilla/bleach) so the only tags allowed are `a[href]`, `abbr`, `acronym`, `b`, `blockquote`, `code`, `em`, `i`, `li`, `ol`, `strong`, `ul`, `pre`, `p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`.
 
 ```sql
-select '<h1>Number of states: ' || count(*) || '</h1> as markdown from states;
+select '<h1>Number of states: ' || count(*) || '</h1>' as markdown from states;
 ```
 
 # Custom widgets

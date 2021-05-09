@@ -273,6 +273,15 @@ def _dashboard_index(
 
     user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
 
+    saved_dashboards = []
+    if request.user and not request.user.is_anonymous:
+        saved_dashboards = [
+            (dashboard, dashboard.user_can_edit(request.user))
+            for dashboard in Dashboard.get_visible_to_user(request.user).select_related(
+                "owned_by", "view_group", "edit_group"
+            )
+        ]
+
     context = {
         "title": title or "SQL Dashboard",
         "html_title": title or html_title,
@@ -287,12 +296,7 @@ def _dashboard_index(
         and user_can_execute_sql,
         "parameter_values": parameter_values.items(),
         "too_long_so_use_post": too_long_so_use_post,
-        "saved_dashboards": [
-            (dashboard, dashboard.user_can_edit(request.user))
-            for dashboard in Dashboard.get_visible_to_user(request.user).select_related(
-                "owned_by", "view_group", "edit_group"
-            )
-        ],
+        "saved_dashboards": saved_dashboards,
     }
 
     if extra_context:

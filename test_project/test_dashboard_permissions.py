@@ -1,7 +1,7 @@
 from enum import Enum
 
 import pytest
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import User, Group
 
 from django_sql_dashboard.models import Dashboard
 
@@ -157,3 +157,150 @@ def test_unlisted_dashboard_has_meta_robots(client, dashboard_db):
     response2 = client.get("/dashboard/unlisted/")
     assert response2.status_code == 200
     assert b'<meta name="robots" content="noindex">' not in response2.content
+
+
+@pytest.mark.parametrize(
+    "dashboard,expected,expected_if_staff,expected_if_superuser",
+    (
+        ("owned_by_user", True, True, True),
+        ("owned_by_other_private", False, False, False),
+        ("owned_by_other_public", True, True, True),
+        ("owned_by_other_unlisted", False, False, False),
+        ("owned_by_other_loggedin", True, True, True),
+        ("owned_by_other_group_not_member", False, False, False),
+        ("owned_by_other_group_member", True, True, True),
+        ("owned_by_other_staff", False, True, True),
+        ("owned_by_other_superuser", False, False, True),
+    ),
+)
+def test_get_visible_to_user(
+    db, dashboard, expected, expected_if_staff, expected_if_superuser
+):
+    user = User.objects.create(username="test")
+    other = User.objects.create(username="other")
+    group_member = Group.objects.create(name="group_member")
+    user.groups.add(group_member)
+    group_not_member = Group.objects.create(name="group_not_member")
+    Dashboard.objects.create(slug="owned_by_user", owned_by=user, view_policy="private")
+    Dashboard.objects.create(
+        slug="owned_by_other_private", owned_by=other, view_policy="private"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_public", owned_by=other, view_policy="public"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_unlisted", owned_by=other, view_policy="unlisted"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_loggedin", owned_by=other, view_policy="loggedin"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_group_not_member",
+        owned_by=other,
+        view_policy="group",
+        view_group=group_not_member,
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_group_member",
+        owned_by=other,
+        view_policy="group",
+        view_group=group_member,
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_staff", owned_by=other, view_policy="staff"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_superuser", owned_by=other, view_policy="superuser"
+    )
+    visible_dashboards = set(
+        Dashboard.get_visible_to_user(user).values_list("slug", flat=True)
+    )
+    if expected:
+        assert (
+            dashboard in visible_dashboards
+        ), "Expected user to be able to see {}".format(dashboard)
+    else:
+        assert (
+            dashboard not in visible_dashboards
+        ), "Expected user not to be able to see {}".format(dashboard)
+    user.is_staff = True
+    user.save()
+    visible_dashboards = set(
+        Dashboard.get_visible_to_user(user).values_list("slug", flat=True)
+    )
+    if expected_if_staff:
+        assert (
+            dashboard in visible_dashboards
+        ), "Expected staff user to be able to see {}".format(dashboard)
+    else:
+        assert (
+            dashboard not in visible_dashboards
+        ), "Expected staff user not to be able to see {}".format(dashboard)
+    user.is_superuser = True
+    user.save()
+    visible_dashboards = set(
+        Dashboard.get_visible_to_user(user).values_list("slug", flat=True)
+    )
+    if expected_if_superuser:
+        assert (
+            dashboard in visible_dashboards
+        ), "Expected super user to be able to see {}".format(dashboard)
+    else:
+        assert (
+            dashboard not in visible_dashboards
+        ), "Expected super user not to be able to see {}".format(dashboard)
+
+
+@pytest.mark.parametrize(
+    "dashboard,expected,expected_if_staff,expected_if_superuser",
+    (
+        ("owned_by_user", True, True, True),
+        ("owned_by_other_private", False, False, False),
+        ("owned_by_other_loggedin", True, True, True),
+        ("owned_by_other_group_not_member", False, False, False),
+        ("owned_by_other_group_member", True, True, True),
+        ("owned_by_other_staff", False, True, True),
+        ("owned_by_other_superuser", False, False, True),
+    ),
+)
+def test_user_can_edit(
+    db, dashboard, expected, expected_if_staff, expected_if_superuser
+):
+    user = User.objects.create(username="test")
+    other = User.objects.create(username="other")
+    group_member = Group.objects.create(name="group_member")
+    user.groups.add(group_member)
+    group_not_member = Group.objects.create(name="group_not_member")
+    Dashboard.objects.create(slug="owned_by_user", owned_by=user, edit_policy="private")
+    Dashboard.objects.create(
+        slug="owned_by_other_private", owned_by=other, edit_policy="private"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_loggedin", owned_by=other, edit_policy="loggedin"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_group_not_member",
+        owned_by=other,
+        edit_policy="group",
+        edit_group=group_not_member,
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_group_member",
+        owned_by=other,
+        edit_policy="group",
+        edit_group=group_member,
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_staff", owned_by=other, edit_policy="staff"
+    )
+    Dashboard.objects.create(
+        slug="owned_by_other_superuser", owned_by=other, edit_policy="superuser"
+    )
+    dashboard_obj = Dashboard.objects.get(slug=dashboard)
+    assert dashboard_obj.user_can_edit(user) == expected
+    user.is_staff = True
+    user.save()
+    assert dashboard_obj.user_can_edit(user) == expected_if_staff
+    user.is_superuser = True
+    user.save()
+    assert dashboard_obj.user_can_edit(user) == expected_if_superuser

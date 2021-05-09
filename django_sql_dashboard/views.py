@@ -287,6 +287,12 @@ def _dashboard_index(
         and user_can_execute_sql,
         "parameter_values": parameter_values.items(),
         "too_long_so_use_post": too_long_so_use_post,
+        "saved_dashboards": [
+            (dashboard, dashboard.user_can_edit(request.user))
+            for dashboard in Dashboard.get_visible_to_user(request.user).select_related(
+                "owned_by", "view_group", "edit_group"
+            )
+        ],
     }
 
     if extra_context:

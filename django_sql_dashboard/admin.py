@@ -10,6 +10,7 @@ class DashboardQueryInline(admin.TabularInline):
 
 @admin.register(Dashboard)
 class DashboardAdmin(admin.ModelAdmin):
+    list_display = ("slug", "title", "owned_by")
     inlines = [
         DashboardQueryInline,
     ]

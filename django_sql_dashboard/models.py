@@ -65,13 +65,60 @@ class Dashboard(models.Model):
     )
 
     def __str__(self):
-        return self.slug
+        return self.title or self.slug
+
+    def view_summary(self):
+        return self.get_view_policy_display()
 
     def get_absolute_url(self):
         return reverse("django_sql_dashboard-dashboard", args=[self.slug])
 
+    def get_edit_url(self):
+        return reverse("admin:django_sql_dashboard_dashboard_change", args=(self.id,))
+
     class Meta:
         permissions = [("execute_sql", "Can execute arbitrary SQL queries")]
+
+    def user_can_edit(self, user):
+        if not user:
+            return False
+        if self.owned_by == user:
+            return True
+        if self.edit_policy == self.EditPolicies.LOGGEDIN:
+            return True
+        if self.edit_policy == self.EditPolicies.STAFF and user.is_staff:
+            return True
+        if self.edit_policy == self.EditPolicies.SUPERUSER and user.is_superuser:
+            return True
+        if (
+            self.edit_policy == self.EditPolicies.GROUP
+            and self.edit_group
+            and self.edit_group.user_set.filter(pk=user.pk).exists()
+        ):
+            return True
+        return False
+
+    @classmethod
+    def get_visible_to_user(cls, user):
+        allowed_policies = [cls.ViewPolicies.PUBLIC, cls.ViewPolicies.LOGGEDIN]
+        if user.is_staff:
+            allowed_policies.append(cls.ViewPolicies.STAFF)
+        if user.is_superuser:
+            allowed_policies.append(cls.ViewPolicies.SUPERUSER)
+        return (
+            cls.objects.filter(
+                models.Q(owned_by=user)
+                | models.Q(view_policy__in=allowed_policies)
+                | models.Q(view_policy=cls.ViewPolicies.GROUP, view_group__user=user)
+            )
+            .annotate(
+                is_owner=models.ExpressionWrapper(
+                    models.Q(owned_by__exact=user.pk),
+                    output_field=models.BooleanField(),
+                )
+            )
+            .order_by("-is_owner", "slug")
+        )
 
 
 class DashboardQuery(models.Model):

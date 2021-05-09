@@ -10,8 +10,6 @@ Brings a useful subset of [Datasette](https://datasette.io/) to Django.
 
 This currently only works with PostgreSQL.
 
-This is **very early alpha**. You should not yet trust this code, especially with regards to security. Do not run this in production (yet)!
-
 Contents
 --------
 

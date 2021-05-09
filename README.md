@@ -11,8 +11,6 @@ Brings a useful subset of [Datasette](https://datasette.io/) to Django.
 
 Currently only works with PostgreSQL.
 
-This is **very early alpha**. You should not yet trust this code, especially with regards to security. Do not run this in production (yet)!
-
 ## Documentation
 
 Full documentation is at [django-sql-dashboard.readthedocs.io](https://django-sql-dashboard.readthedocs.io/)

@@ -75,14 +75,6 @@
       </div>
     {% endif %}
   </details>
-  {% if not saved_dashboard %}<p>
-    <input
-      class="btn"
-      type="submit"
-      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-    />
-  </p>{% endif %}
-  </details>
   <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
   <!-- templates considered: {{ result.templates|join:", " }} -->
   <script>

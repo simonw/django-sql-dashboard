@@ -5,11 +5,20 @@
 [![Tests](https://github.com/simonw/django-sql-dashboard/workflows/Test/badge.svg)](https://github.com/simonw/django-sql-dashboard/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/django-sql-dashboard/blob/main/LICENSE)
 
-Django app for building dashboards using raw SQL queries
+Django SQL Dashboard provides an authenticated interface for executing read-only SQL queries directly against your PostgreSQL database, bringing a useful subset of Datasette to Django.
 
-Brings a useful subset of [Datasette](https://datasette.io/) to Django.
+Applications include ad-hoc analysis and debugging, plus the creation of reporting dashboards that can be shared with team members or published online.
 
-Currently only works with PostgreSQL.
+Features include:
+
+- Safely run read-only one or more SQL queries against your database and view the results in your browser
+- Bookmark queries and share those links with other members of your team
+- Create [saved dashboards](https://django-sql-dashboard.datasette.io/en/latest/saved-dashboards.html) from your queries, with full control over who can view and edit them
+- Produce [bar charts](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#bar-label-bar-quantity), [progress bars](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#total-count-completed-count) and more from SQL queries, with the ability to easily create new [custom dashboard widgets](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#custom-widgets) using the Django template system
+- Write SQL queries that safely construct and render [markdown](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#markdown) and [HTML](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#html)
+- Export the full results of SQL queries as downloadable CSV or TSV files
+- Copy and paste the results of SQL queries directly into tools such as Google Sheets or Excel
+- Uses Django's authentication system, so dashboard accounts can be granted using Django's Admin tools
 
 ## Documentation
 

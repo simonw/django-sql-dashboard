@@ -26,7 +26,7 @@
 <form action="{{ request.path }}" method="POST">
   {% csrf_token %}
   {% if query_results %}
-    <p>↓ <a href="#save-dashboard">Save this dashboard</a></p>
+    <p>↓ <a href="#save-dashboard">Save this dashboard</a> | <a href="{{ request.path }}">Remove all queries</a></p>
   {% endif %}
   {% if parameter_values %}
     <h3>Query parameters</h3>

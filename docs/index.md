@@ -23,6 +23,7 @@ setup
 sql
 saved-dashboards
 widgets
+security
 contributing
 
 ```

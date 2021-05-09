@@ -10,27 +10,10 @@ Install this library using `pip`:
 
 Add `"django_sql_dashboard"` to your `INSTALLED_APPS` in `settings.py`.
 
-Define a `"dashboard"` database alias in `settings.py`. It should look something like this:
-
-```python
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "mydb",
-    },
-    "dashboard": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "mydb",
-        "OPTIONS": {"options": "-c default_transaction_read_only=on -c statement_timeout=100"},
-    },
-}
-```
-Even better: create a new PostgreSQL role that is limited to read-only SELECT access to a list of tables, following [these instructions](https://til.simonwillison.net/postgresql/read-only-postgresql-user).
-
 Add the following to your `urls.py`:
 
 ```python
-from django.urls import path, inclued
+from django.urls import path, include
 import django_sql_dashboard
 
 urlpatterns = [
@@ -39,7 +22,75 @@ urlpatterns = [
 ]
 ```
 
+## Setting up read-only PostgreSQL credentials
+
+Create a new PostgreSQL user or role that is limited to read-only SELECT access to a specific list of tables.
+
+If your read-only role is called `my-read-only-role`, you can grant access using the following SQL (executed as a privileged user):
+
+```sql
+GRANT USAGE ON SCHEMA PUBLIC TO "my-read-only-role";
+```
+This grants that role the ability to see what tables exist. You then need to grant `SELECT` access to specific tables like this:
+```sql
+GRANT SELECT ON TABLE
+    public.locations_location,
+    public.locations_county,
+    public.django_content_type,
+    public.django_migrations
+TO "my-read-only-role";
+```
+Think carefully about which tables you expose to the dashboard - in particular, you should avoid exposing tables that contain sensitive data such as `auth_user` or `django_session`.
+
+## Configuring the "dashboard" database alias
+
+Django SQL Dashboard defaults to executing all queries using the `"dashboard"` Django database alias.
+
+You can define this `"dashboard"` database alias in `settings.py`. Your `DATABASES` section should look something like this:
+
+```python
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "mydb",
+        "USER": "read_write_user",
+        "PASSWORD": "read_write_password",
+        "HOST": "dbhost.example.com",
+        "PORT": "5432",
+    },
+    "dashboard": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "mydb",
+        "USER": "read_only_user",
+        "PASSWORD": "read_only_password",
+        "HOST": "dbhost.example.com",
+        "PORT": "5432",
+        "OPTIONS": {
+            "options": "-c statement_timeout=100"
+        },
+    },
+}
+```
+In addition to the read-only user and password, pay attention to the `"OPTIONS"` section: this sets a statement timeout of 100ms - queries that take longer than that will be terminated with an error message.
+
 Now visit `/dashboard/` as a staff user to start trying out the dashboard.
+
+### Danger mode: configuration without a read-only database user
+
+Some hosting environments such as Heroku charge extra for the ability to create read-only database users. For smaller projects with dashboard access only made available to trusted users it's possible to configure this tool without a read-only account, using the following options:
+
+```python
+    # ...
+    "dashboard": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "USER": "read_write_user",
+        # ...
+        "OPTIONS": {
+            "options": "-c default_transaction_read_only=on -c statement_timeout=100"
+        },
+    },
+```
+The `-c default_transaction_read_only=on` option here should prevent accidental writes from being executed, but note that dashboard users in this configuration will be able to access _all tables_ including tables that might contain sensitive information. Only use this trick if you are confident you fully understand the implications!
 
 ## Additional settings
 

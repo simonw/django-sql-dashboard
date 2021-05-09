@@ -1,7 +1,7 @@
 from enum import Enum
 
 import pytest
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 
 from django_sql_dashboard.models import Dashboard
 

@@ -68,7 +68,10 @@ class Dashboard(models.Model):
         return self.title or self.slug
 
     def view_summary(self):
-        return self.get_view_policy_display()
+        s = self.get_view_policy_display()
+        if self.view_policy == "group":
+            s += ' "{}"'.format(self.view_group)
+        return s
 
     def get_absolute_url(self):
         return reverse("django_sql_dashboard-dashboard", args=[self.slug])

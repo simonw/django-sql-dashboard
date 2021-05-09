@@ -1,4 +1,7 @@
+from html import escape
+
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from .models import Dashboard, DashboardQuery
 
@@ -10,7 +13,7 @@ class DashboardQueryInline(admin.TabularInline):
 
 @admin.register(Dashboard)
 class DashboardAdmin(admin.ModelAdmin):
-    list_display = ("slug", "title", "owned_by")
+    list_display = ("slug", "title", "owned_by", "view_policy", "view_dashboard")
     inlines = [
         DashboardQueryInline,
     ]
@@ -25,6 +28,11 @@ class DashboardAdmin(admin.ModelAdmin):
             {"fields": ("view_policy", "edit_policy", "view_group", "edit_group")},
         ),
     )
+
+    def view_dashboard(self, obj):
+        return mark_safe(
+            '<a href="{path}">{path}</a>'.format(path=escape(obj.get_absolute_url()))
+        )
 
     def save_model(self, request, obj, form, change):
         if not obj.owned_by_id:

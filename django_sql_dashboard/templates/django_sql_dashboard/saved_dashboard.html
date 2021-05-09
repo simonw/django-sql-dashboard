@@ -17,6 +17,18 @@
   <p>{{ dashboard.description }}</p>
 {% endif %}
 
+<p style="color: #666; font-size: 0.9em; margin-top: -1em">
+  {% if user_owns_dashboard %}
+    Owned by you,
+  {% else %}
+    Owned by <strong>{{ dashboard.owned_by }}</strong>,
+  {% endif %}
+  visibility: {{ dashboard.view_summary }}
+  {% if user_can_edit_dashboard %}
+    - <a href="{{ dashboard.get_edit_url }}">edit</a>
+  {% endif %}
+</p>
+
 <form action="{{ request.path }}" method="GET">
   {% if parameter_values %}
     <h3>Query parameters</h3>

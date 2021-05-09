@@ -292,6 +292,8 @@ def _dashboard_index(
         "description": description,
         "dashboard": dashboard,
         "saved_dashboard": bool(dashboard),
+        "user_owns_dashboard": dashboard and request.user == dashboard.owned_by,
+        "user_can_edit_dashboard": dashboard and dashboard.user_can_edit(request.user),
         "user_can_execute_sql": user_can_execute_sql,
         "user_can_export_data": getattr(settings, "DASHBOARD_ENABLE_FULL_EXPORT", None)
         and user_can_execute_sql,

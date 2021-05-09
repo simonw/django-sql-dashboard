@@ -274,7 +274,8 @@ def _dashboard_index(
     user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
 
     saved_dashboards = []
-    if request.user and not request.user.is_anonymous:
+    if not dashboard:
+        # Only show saved dashboards on index page
         saved_dashboards = [
             (dashboard, dashboard.user_can_edit(request.user))
             for dashboard in Dashboard.get_visible_to_user(request.user).select_related(

@@ -13,7 +13,7 @@ Currently only works with PostgreSQL.
 
 ## Documentation
 
-Full documentation is at [django-sql-dashboard.readthedocs.io](https://django-sql-dashboard.readthedocs.io/)
+Full documentation is at [django-sql-dashboard.datasette.io](https://django-sql-dashboard.datasette.io/)
 
 ## Screenshot
 

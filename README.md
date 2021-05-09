@@ -5,7 +5,7 @@
 [![Tests](https://github.com/simonw/django-sql-dashboard/workflows/Test/badge.svg)](https://github.com/simonw/django-sql-dashboard/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/django-sql-dashboard/blob/main/LICENSE)
 
-Django SQL Dashboard provides an authenticated interface for executing read-only SQL queries directly against your PostgreSQL database, bringing a useful subset of Datasette to Django.
+Django SQL Dashboard provides an authenticated interface for executing read-only SQL queries directly against your PostgreSQL database, bringing a useful subset of [Datasette](https://datasette.io/) to Django.
 
 Applications include ad-hoc analysis and debugging, plus the creation of reporting dashboards that can be shared with team members or published online.
 

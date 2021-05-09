@@ -271,6 +271,23 @@ def _dashboard_index(
     if sql_queries:
         html_title = "SQL: " + " [,] ".join(sql_queries)
 
+    if dashboard and dashboard.title:
+        html_title = dashboard.title
+
+    # Add named parameter values, if any exist
+    provided_values = {
+        key: value for key, value in parameter_values.items() if value.strip()
+    }
+    if provided_values:
+        if len(provided_values) == 1:
+            html_title += ": {}".format(list(provided_values.values())[0])
+        else:
+            html_title += ": {}".format(
+                ", ".join(
+                    "{}={}".format(key, value) for key, value in provided_values.items()
+                )
+            )
+
     user_can_execute_sql = request.user.has_perm("django_sql_dashboard.execute_sql")
 
     saved_dashboards = []
@@ -285,7 +302,7 @@ def _dashboard_index(
 
     context = {
         "title": title or "SQL Dashboard",
-        "html_title": title or html_title,
+        "html_title": html_title,
         "query_results": query_results,
         "unverified_sql_queries": unverified_sql_queries,
         "available_tables": available_tables,

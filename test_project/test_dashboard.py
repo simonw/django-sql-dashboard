@@ -138,21 +138,37 @@ def test_dashboard_uses_post_if_sql_is_too_long(admin_client):
 
 
 @pytest.mark.parametrize(
-    "path,sqls,expected_title",
+    "path,sqls,args,expected_title",
     (
-        ("/dashboard/", [], "SQL Dashboard"),
-        ("/dashboard/", ["select 1"], "SQL: select 1"),
-        ("/dashboard/", ["select 1", "select 2"], "SQL: select 1 [,] select 2"),
-        ("/dashboard/test/", [], "Test dashboard"),
+        ("/dashboard/", [], None, "SQL Dashboard"),
+        ("/dashboard/", ["select 1"], None, "SQL: select 1"),
+        (
+            "/dashboard/",
+            ["select %(name)s"],
+            {"name": "test"},
+            "SQL: select %(name)s: test",
+        ),
+        (
+            "/dashboard/",
+            ["select %(name)s, %(age)s"],
+            {"name": "test", "age": 5},
+            "SQL: select %(name)s, %(age)s: name=test, age=5",
+        ),
+        ("/dashboard/", ["select 1", "select 2"], None, "SQL: select 1 [,] select 2"),
+        ("/dashboard/test/", [], None, "Test dashboard"),
+        ("/dashboard/test/", [], {"name": "claire"}, "Test dashboard: claire"),
     ),
 )
 def test_dashboard_html_title(
-    admin_client, saved_dashboard, path, sqls, expected_title
+    admin_client, saved_dashboard, path, args, sqls, expected_title
 ):
+    saved_dashboard.queries.create(sql="select %(name)s")
+    args = args or {}
     if sqls:
-        response = admin_client.post(path, {"sql": sqls}, follow=True)
+        args["sql"] = sqls
+        response = admin_client.post(path, args, follow=True)
     else:
-        response = admin_client.get(path)
+        response = admin_client.get(path, data=args)
     soup = BeautifulSoup(response.content, "html5lib")
     assert soup.find("title").text == expected_title
 

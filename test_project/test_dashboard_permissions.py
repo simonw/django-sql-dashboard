@@ -264,7 +264,7 @@ def test_get_visible_to_user(
     ),
 )
 def test_user_can_edit(
-    db, dashboard, expected, expected_if_staff, expected_if_superuser
+    db, client, dashboard, expected, expected_if_staff, expected_if_superuser
 ):
     user = User.objects.create(username="test")
     other = User.objects.create(username="other")
@@ -298,9 +298,42 @@ def test_user_can_edit(
     )
     dashboard_obj = Dashboard.objects.get(slug=dashboard)
     assert dashboard_obj.user_can_edit(user) == expected
+    if dashboard != "owned_by_other_staff":
+        # This test doesn't make sense for the 'staff' one, they cannot access admin
+        # https://github.com/simonw/django-sql-dashboard/issues/44#issuecomment-835653787
+        assert can_user_edit_using_admin(client, user, dashboard_obj) == expected
     user.is_staff = True
     user.save()
     assert dashboard_obj.user_can_edit(user) == expected_if_staff
+    assert can_user_edit_using_admin(client, user, dashboard_obj) == expected_if_staff
     user.is_superuser = True
     user.save()
     assert dashboard_obj.user_can_edit(user) == expected_if_superuser
+    assert can_user_edit_using_admin(client, user, dashboard_obj)
+
+
+def can_user_edit_using_admin(client, user, dashboard):
+    # Only staff can access the admin:
+    user.is_staff = True
+    user.save()
+    client.force_login(user)
+    response = client.get(dashboard.get_edit_url())
+    return (
+        b'<input type="text" name="title" class="vTextField" maxlength="128" id="id_title">'
+        in response.content
+    )
+
+
+def test_superuser_can_reassign_ownership(client, db):
+    user = User.objects.create(username="test", is_staff=True)
+    dashboard = Dashboard.objects.create(
+        slug="dashboard", owned_by=user, view_policy="private", edit_policy="private"
+    )
+    client.force_login(user)
+    response = client.get(dashboard.get_edit_url())
+    assert b'<div class="readonly">test</div>' in response.content
+    assert b'<input type="text" name="owned_by" value="' not in response.content
+    user.is_superuser = True
+    user.save()
+    response2 = client.get(dashboard.get_edit_url())
+    assert b'<input type="text" name="owned_by" value="' in response2.content

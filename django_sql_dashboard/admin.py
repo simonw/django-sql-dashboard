@@ -15,7 +15,6 @@ class DashboardAdmin(admin.ModelAdmin):
         DashboardQueryInline,
     ]
     raw_id_fields = ("owned_by",)
-    readonly_fields = ("created_at",)
     fieldsets = (
         (
             None,
@@ -31,3 +30,16 @@ class DashboardAdmin(admin.ModelAdmin):
         if not obj.owned_by_id:
             obj.owned_by = request.user
         obj.save()
+
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        if request.user.is_superuser:
+            return True
+        return obj.user_can_edit(request.user)
+
+    def get_readonly_fields(self, request, obj):
+        readonly_fields = ["created_at"]
+        if not request.user.is_superuser:
+            readonly_fields.append("owned_by")
+        return readonly_fields

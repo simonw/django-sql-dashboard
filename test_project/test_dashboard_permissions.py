@@ -331,7 +331,10 @@ def test_superuser_can_reassign_ownership(client, db):
     )
     client.force_login(user)
     response = client.get(dashboard.get_edit_url())
-    assert b'<div class="readonly">test</div>' in response.content
+    assert (
+        b'<div class="readonly">test</div>' in response.content
+        or b'<div class="readonly"><a href="/admin/auth/user/' in response.content
+    )
     assert b'<input type="text" name="owned_by" value="' not in response.content
     user.is_superuser = True
     user.save()

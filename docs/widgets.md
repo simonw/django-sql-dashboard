@@ -63,6 +63,30 @@ from
   words
 group by
   word
+order by
+  count(*) desc
+```
+
+Here's a fun variant that uses PostgreSQL's built-in stemming algorithm to first remove common stop words:
+
+```sql
+with words as (
+  select
+    lower(
+      (regexp_matches(to_tsvector('english', body)::text, '[a-z]+', 'g'))[1]
+    ) as word
+  from
+    articles
+)
+select
+  word as wordcloud_word,
+  count(*) as wordcloud_count
+from
+  words
+group by
+  word
+order by
+  count(*) desc
 ```
 
 ## markdown

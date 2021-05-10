@@ -126,7 +126,6 @@ def _dashboard_index(
     title=None,
     description=None,
     dashboard=None,
-    cache_control_private=False,
     too_long_so_use_post=False,
     template="django_sql_dashboard/dashboard.html",
     extra_context=None,
@@ -327,7 +326,7 @@ def _dashboard_index(
         template,
         context,
     )
-    if cache_control_private:
+    if request.user.is_authenticated:
         response["cache-control"] = "private"
     response["Content-Security-Policy"] = "frame-ancestors 'self'"
     return response
@@ -340,14 +339,9 @@ def dashboard(request, slug):
     owner = dashboard.owned_by
     denied = HttpResponseForbidden("You cannot access this dashboard")
     denied["cache-control"] = "private"
-    cache_control_private = True
     if view_policy == Dashboard.ViewPolicies.PRIVATE:
         if request.user != owner:
             return denied
-    elif view_policy == Dashboard.ViewPolicies.PUBLIC:
-        cache_control_private = False
-    elif view_policy == Dashboard.ViewPolicies.UNLISTED:
-        cache_control_private = False
     elif view_policy == Dashboard.ViewPolicies.LOGGEDIN:
         if not request.user.is_authenticated:
             return denied
@@ -373,7 +367,6 @@ def dashboard(request, slug):
         title=dashboard.title,
         description=dashboard.description,
         dashboard=dashboard,
-        cache_control_private=cache_control_private,
         template="django_sql_dashboard/saved_dashboard.html",
     )
 

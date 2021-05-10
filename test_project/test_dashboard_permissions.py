@@ -83,11 +83,11 @@ all_user_types = (
 
 
 @pytest.mark.parametrize(
-    "view_policy,user_types_who_can_see,should_cache_control_private",
+    "view_policy,user_types_who_can_see",
     (
-        ("private", (UserType.owner,), True),
-        ("public", all_user_types, False),
-        ("unlisted", all_user_types, False),
+        ("private", (UserType.owner,)),
+        ("public", all_user_types),
+        ("unlisted", all_user_types),
         (
             "loggedin",
             (
@@ -97,11 +97,10 @@ all_user_types = (
                 UserType.staff,
                 UserType.superuser,
             ),
-            True,
         ),
-        ("group", (UserType.owner, UserType.groupmember), True),
-        ("staff", (UserType.owner, UserType.staff, UserType.superuser), True),
-        ("superuser", (UserType.owner, UserType.superuser), True),
+        ("group", (UserType.owner, UserType.groupmember)),
+        ("staff", (UserType.owner, UserType.staff, UserType.superuser)),
+        ("superuser", (UserType.owner, UserType.superuser)),
     ),
 )
 def test_saved_dashboard_view_permissions(
@@ -110,7 +109,6 @@ def test_saved_dashboard_view_permissions(
     view_policy,
     user_types_who_can_see,
     django_user_model,
-    should_cache_control_private,
 ):
     users = {
         UserType.owner: django_user_model.objects.create(username="owner"),
@@ -126,7 +124,7 @@ def test_saved_dashboard_view_permissions(
     }
     group = Group.objects.create(name="view-group")
     users[UserType.groupmember].groups.add(group)
-    dashboard = Dashboard.objects.create(
+    Dashboard.objects.create(
         slug="dash",
         owned_by=users[UserType.owner],
         view_policy=view_policy,
@@ -142,7 +140,7 @@ def test_saved_dashboard_view_permissions(
             assert response.status_code == 200
         else:
             assert response.status_code == 403
-        if should_cache_control_private:
+        if user is not None:
             assert response["cache-control"] == "private"
 
 

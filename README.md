@@ -9,6 +9,8 @@ Django SQL Dashboard provides an authenticated interface for executing read-only
 
 Applications include ad-hoc analysis and debugging, plus the creation of reporting dashboards that can be shared with team members or published online.
 
+See my blog for [more about this project](https://simonwillison.net/2021/May/10/django-sql-dashboard/), including [a video demo](https://www.youtube.com/watch?v=ausrmMZkPEY).
+
 Features include:
 
 - Safely run read-only one or more SQL queries against your database and view the results in your browser

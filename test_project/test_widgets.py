@@ -194,3 +194,21 @@ def test_progress_bar_widget(admin_client, dashboard_db):
     html = response.content.decode("utf-8")
     assert "<h2>72 / 100: 72%</h2>" in html
     assert 'width: 72%">&nbsp;</div>' in html
+
+
+def test_word_cloud_widget(admin_client, dashboard_db):
+    sql = """
+    select * from (
+      values ('one', 1), ('two', 2), ('three', 3)
+    ) as t (wordcloud_word, wordcloud_count);
+    """
+    response = admin_client.post(
+        "/dashboard/",
+        {"sql": sql},
+        follow=True,
+    )
+    html = response.content.decode("utf-8")
+    assert (
+        '<script id="wordcloud-data-0" type="application/json">[{"wordcloud_word"'
+        in html
+    )

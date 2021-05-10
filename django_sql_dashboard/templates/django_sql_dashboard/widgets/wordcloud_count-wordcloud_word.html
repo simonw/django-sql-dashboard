@@ -1,0 +1,68 @@
+{% extends "django_sql_dashboard/widgets/_base_widget.html" %}
+
+{% block widget_results %}
+<script
+  src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5"
+  integrity="sha384-QdJK9M8QwqLqENe8Vd/mQIIk/BUQCC3BLh+kqB+UPKbKBsvOmcnmZTikm9prWMeO"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/d3@6.7.0"
+  integrity="sha384-ma33ZEb8L5emtidZhYJFZNIFdht2E8f5wHQMKQGom0aIx9rRKm86XXCjGxOISpM9"
+  crossorigin="anonymous"
+></script>
+<div id="wordcloud-{{ result.index }}"></div>
+{% with "wordcloud-data-"|add:result.index as script_name %}
+{{ result.rows|json_script:script_name }}
+<script>
+(function() {
+  let wordcloudData = JSON.parse(
+    document.getElementById("{{ script_name }}").textContent
+  );
+  var minScore = Math.min(...wordcloudData.map(w => w.wordcloud_count));
+  var maxScore = Math.max(...wordcloudData.map(w => w.wordcloud_count));
+  var fontScale = d3.scaleLinear()
+    .domain([minScore, maxScore])
+    .range([20, 100]);
+
+  function colors(s) {
+    return s.match(/.{6}/g).map(function(x) {
+      return "#" + x;
+    });
+  }
+  var fill = colors("1f77b4ff7f0e2ca02cd627289467bd8c564be377c27f7f7fbcbd2217becf");
+
+  function draw(words) {
+    d3.select("#wordcloud-{{ result.index }}").append("svg")
+        .attr("width", layout.size()[0])
+        .attr("height", layout.size()[1])
+      .append("g")
+        .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill[i % fill.length]; })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+  var wordData = wordcloudData.map(function(d) {
+    return {text: d.wordcloud_word, size: d.wordcloud_count};
+  });
+  var layout = d3.layout.cloud()
+    .size([document.querySelector('#wordcloud-{{ result.index }}').getBoundingClientRect().width, 500])
+    .words(wordData)
+    .rotate(function() { return (~~(Math.random() * 6) - 3) * 30; })
+    .padding(5)
+    .font("Impact")
+    .fontSize(function(d) { return fontScale(d.size); })
+    .on("end", draw);
+  layout.start()
+})();
+</script>
+{% endwith %}
+{% endblock %}

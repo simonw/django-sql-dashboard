@@ -2,7 +2,7 @@
 
 SQL queries default to displaying as a table. Other forms of display - called widgets - are also available, and are selected based on the names of the columns returned by the query.
 
-## bar_label, bar_quantity
+## Bar chart: bar_label, bar_quantity
 
 A query that returns columns called `bar_label` and `bar_quantity` will be rendered as a simple bar chart, using [Vega-Lite](https://vega.github.io/vega-lite/).
 
@@ -26,7 +26,7 @@ SELECT * FROM (
 ) AS t (bar_quantity, bar_label);
 ```
 
-## big_number, label
+## Big number: big_number, label
 
 If you want to display the results as a big number accompanied by a label, you can do so by returning `big_number` and `label` columns from your query, for example.
 
@@ -34,12 +34,35 @@ If you want to display the results as a big number accompanied by a label, you c
 select 'Number of states' as label, count(*) as big_number from states;
 ```
 
-## total_count, completed_count
+## Progress bar: total_count, completed_count
 
 To display a progress bar, return columns `total_count` and `completed_count`.
 
 ```sql
 select 1203 as total_count, 755 as completed_count;
+```
+
+## Word cloud: wordcloud_word, wordcloud_count
+
+To display a word cloud, return a column `wordcloud_word` containing words with a corresponding `wordcloud_count` column with the frequency of those words.
+
+This example generates word clouds for article body text:
+```sql
+with words as (
+  select
+    lower(
+      (regexp_matches(body, '\w+', 'g'))[1]
+    ) as word
+  from
+    articles
+)
+select
+  word as wordcloud_word,
+  count(*) as wordcloud_count
+from
+  words
+group by
+  word
 ```
 
 ## markdown

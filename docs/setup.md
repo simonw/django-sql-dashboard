@@ -66,12 +66,12 @@ DATABASES = {
         "HOST": "dbhost.example.com",
         "PORT": "5432",
         "OPTIONS": {
-            "options": "-c statement_timeout=100"
+            "options": "-c default_transaction_read_only=on -c statement_timeout=100"
         },
     },
 }
 ```
-In addition to the read-only user and password, pay attention to the `"OPTIONS"` section: this sets a statement timeout of 100ms - queries that take longer than that will be terminated with an error message.
+In addition to the read-only user and password, pay attention to the `"OPTIONS"` section: this sets a statement timeout of 100ms - queries that take longer than that will be terminated with an error message. It also sets it so transactions will be read-only by default, as an extra layer of protection should your read-only user have more permissions that you intended.
 
 Now visit `/dashboard/` as a staff user to start trying out the dashboard.
 

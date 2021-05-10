@@ -17,7 +17,7 @@ Features include:
 - [Named parameters](https://django-sql-dashboard.datasette.io/en/latest/sql.html#sql-parameters) such as `select * from entries where id = %(id)s` will be turned into form fields, allowing quick creation of interactive dashboards
 - Produce [bar charts](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#bar-label-bar-quantity), [progress bars](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#total-count-completed-count) and more from SQL queries, with the ability to easily create new [custom dashboard widgets](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#custom-widgets) using the Django template system
 - Write SQL queries that safely construct and render [markdown](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#markdown) and [HTML](https://django-sql-dashboard.datasette.io/en/latest/widgets.html#html)
-- Export the full results of SQL queries as downloadable CSV or TSV files
+- Export the full results of a SQL query as a downloadable CSV or TSV file, using a combination of Django's [streaming HTTP response](https://docs.djangoproject.com/en/3.2/ref/request-response/#django.http.StreamingHttpResponse) mechanism and PostgreSQL [server-side cursors](https://www.psycopg.org/docs/usage.html#server-side-cursors) to efficiently stream large amounts of data without running out of resources
 - Copy and paste the results of SQL queries directly into tools such as Google Sheets or Excel
 - Uses Django's authentication system, so dashboard accounts can be granted using Django's Admin tools
 

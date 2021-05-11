@@ -86,6 +86,7 @@ def dashboard_index(request):
             (key, value)
             for key, value in request.POST.items()
             if key not in ("sql", "csrfmiddlewaretoken")
+            and not key.startswith("_save-")
         ]
         signed_sqls = [sign_sql(sql) for sql in sqls if sql.strip()]
         params = {

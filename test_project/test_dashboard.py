@@ -15,10 +15,24 @@ def test_dashboard_submit_sql(admin_client, dashboard_db):
     assert get_response.status_code == 200
     assert get_response["Content-Security-Policy"] == "frame-ancestors 'self'"
     sql = "select 14 + 33"
-    response = admin_client.post("/dashboard/", {"sql": sql})
+    response = admin_client.post(
+        "/dashboard/",
+        {
+            "sql": sql,
+            "_save-title": "",
+            "_save-slug": "",
+            "_save-description": "",
+            "_save-view_policy": "private",
+            "_save-view_group": "",
+            "_save-edit_policy": "private",
+            "_save-edit_group": "",
+        },
+    )
     assert response.status_code == 302
     # Should redirect to ?sql=signed-value
-    signed_sql = urllib.parse.parse_qs(response.url.split("?")[1])["sql"][0]
+    bits = urllib.parse.parse_qs(response.url.split("?")[1])
+    assert set(bits.keys()) == {"sql"}
+    signed_sql = bits["sql"][0]
     assert signed_sql == sign_sql(sql)
     # GET against this new location should return correct result
     get_response = admin_client.get(response.url)

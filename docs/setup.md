@@ -51,7 +51,7 @@ You can define this `"dashboard"` database alias in `settings.py`. Your `DATABAS
 ```python
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "mydb",
         "USER": "read_write_user",
         "PASSWORD": "read_write_password",
@@ -59,7 +59,7 @@ DATABASES = {
         "PORT": "5432",
     },
     "dashboard": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "mydb",
         "USER": "read_only_user",
         "PASSWORD": "read_only_password",
@@ -82,7 +82,7 @@ Some hosting environments such as Heroku charge extra for the ability to create 
 ```python
     # ...
     "dashboard": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "USER": "read_write_user",
         # ...
         "OPTIONS": {

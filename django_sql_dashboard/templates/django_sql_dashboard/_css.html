@@ -105,3 +105,20 @@ div.query-parameters label {
   color: #666;
   white-space: nowrap;
 }
+ul.dashboard-columns {
+  column-count: 2;
+}
+ul.dashboard-columns li {
+  break-inside: avoid;
+  margin-bottom: 0.3em;
+}
+ul.dashboard-columns li p {
+  margin: 0;
+  color: #666;
+  font-size: 0.8em;
+}
+@media (max-width: 800px) {
+  ul.dashboard-columns {
+    column-count: auto;
+  }
+}

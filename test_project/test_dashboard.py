@@ -199,7 +199,7 @@ def test_dashboard_show_available_tables(admin_client, dashboard_db):
     soup = BeautifulSoup(response.content, "html5lib")
     lis = soup.find("ul").findAll("li")
     details = [
-        {"table": li.find("a").text, "columns": li.find("span").text}
+        {"table": li.find("a").text, "columns": li.find("p").text}
         for li in lis
         if li.find("a").text.startswith("django_sql_dashboard")
     ]

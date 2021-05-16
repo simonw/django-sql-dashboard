@@ -6,7 +6,11 @@ SQL queries default to displaying as a table. Other forms of display - called wi
 
 A query that returns columns called `bar_label` and `bar_quantity` will be rendered as a simple bar chart, using [Vega-Lite](https://vega.github.io/vega-lite/).
 
-For example:
+![A bar chart produced by this widget](bar_label-bar_quantity.png)
+
+Bar chart live demo: [simonwillison.net/dashboard/by-month/](https://simonwillison.net/dashboard/by-month/)
+
+SQL example:
 
 ```sql
 select
@@ -34,6 +38,10 @@ If you want to display the results as a big number accompanied by a label, you c
 select 'Number of states' as label, count(*) as big_number from states;
 ```
 
+![Output of the big number widget](big_number-label.png)
+
+Big number live demo: [simonwillison.net/dashboard/big-numbers-demo/](https://simonwillison.net/dashboard/big-numbers-demo/)
+
 ## Progress bar: total_count, completed_count
 
 To display a progress bar, return columns `total_count` and `completed_count`.
@@ -41,6 +49,10 @@ To display a progress bar, return columns `total_count` and `completed_count`.
 ```sql
 select 1203 as total_count, 755 as completed_count;
 ```
+
+![Output of the progress bar widget](completed_count-total_count.png)
+
+Progress bar live demo: [simonwillison.net/dashboard/progress-bar-demo/](https://simonwillison.net/dashboard/progress-bar-demo/)
 
 ## Word cloud: wordcloud_word, wordcloud_count
 
@@ -88,6 +100,10 @@ group by
 order by
   count(*) desc
 ```
+
+![Output of the word cloud widget](wordcloud_count-wordcloud_word.png)
+
+Word cloud live demo: [simonwillison.net/dashboard/tag-cloud/](https://simonwillison.net/dashboard/tag-cloud/)
 
 ## markdown
 

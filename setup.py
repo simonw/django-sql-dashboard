@@ -42,7 +42,7 @@ setup(
         "test": [
             "psycopg2",
             "pytest",
-            "pytest-django",
+            "pytest-django==4.2.0",
             "pytest-pythonpath",
             "dj-database-url",
             "testing.postgresql",

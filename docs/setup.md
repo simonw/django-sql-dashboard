@@ -42,6 +42,17 @@ TO "my-read-only-role";
 ```
 Think carefully about which tables you expose to the dashboard - in particular, you should avoid exposing tables that contain sensitive data such as `auth_user` or `django_session`.
 
+If you do want to expose `auth_user` - which can be useful if you want to join other tables against it to see details of the user that created another record - you can grant access to specific columns like so:
+```sql
+GRANT SELECT(
+  id, last_login, is_superuser, username, first_name,
+  last_name, email, is_staff, is_active, date_joined
+) ON auth_user TO "my-read-only-role";
+```
+This will allow queries against everything except for the `password` column.
+
+Note that if you use this pattern the query `select * from auth_user` will return a "permission denied" error. You will need to explicitly list the columns you would like to see from that table instead, for example `select id, username, date_joined from auth_user`.
+
 ## Configuring the "dashboard" database alias
 
 Django SQL Dashboard defaults to executing all queries using the `"dashboard"` Django database alias.

@@ -12,6 +12,13 @@ def test_anonymous_users_denied(client):
     assert response.url == "/accounts/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
 
 
+def test_user_without_permission_gets_403(client, dashboard_db):
+    user = User.objects.create(username="noperm", is_active=True, is_staff=True)
+    client.force_login(user)
+    response = client.get("/dashboard/")
+    assert response.status_code == 403
+
+
 def test_superusers_allowed(admin_client, dashboard_db):
     response = admin_client.get("/dashboard/")
     assert response.status_code == 200

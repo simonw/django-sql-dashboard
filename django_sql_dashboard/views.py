@@ -53,7 +53,7 @@ class SaveDashboardForm(ModelForm):
         }
 
 
-@permission_required("django_sql_dashboard.execute_sql")
+@permission_required("django_sql_dashboard.execute_sql", raise_exception=True)
 def dashboard_index(request):
     sql_queries = []
     too_long_so_use_post = False

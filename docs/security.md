@@ -2,6 +2,10 @@
 
 Allowing people to execute their own SQL directly against your database is risky business!
 
+The safest way to use this tool is to create a read-only replica of your PostgreSQL database with a read-only role that enforces a statement time-limit for executed queries. Different database providers have different mechanisms for doing this - consult your hosting provider's documentation.
+
+You should only provide access to this tool to people you trust. Malicious users may be able to negatively affect the performance of your servers through constructing SQL queries that deliberately consume large amounts of resources.
+
 Configured correctly, Django SQL Dashboard uses a number of measures to keep your data and your database server safe:
 
 - I strongly recommend creating a dedicated PostgreSQL role for accessing your database with read-only permissions granted to an allow-list of tables. PostgreSQL has extremely robust, well tested permissions which this tool can take full advantage of.

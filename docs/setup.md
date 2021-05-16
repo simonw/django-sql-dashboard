@@ -24,6 +24,8 @@ urlpatterns = [
 
 ## Setting up read-only PostgreSQL credentials
 
+The safest way to use this tool is against a dedicated read-only replica of your database - see [security](./security) for more details.
+
 Create a new PostgreSQL user or role that is limited to read-only SELECT access to a specific list of tables.
 
 If your read-only role is called `my-read-only-role`, you can grant access using the following SQL (executed as a privileged user):

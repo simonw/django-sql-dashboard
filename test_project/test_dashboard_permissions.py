@@ -6,17 +6,10 @@ from django.contrib.auth.models import Group, User
 from django_sql_dashboard.models import Dashboard
 
 
-def test_anonymous_users_denied(client):
+def test_anonymous_user_redirected_to_login(client):
     response = client.get("/dashboard/?sql=select+1")
     assert response.status_code == 302
     assert response.url == "/accounts/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
-
-
-def test_user_without_permission_gets_403(client, dashboard_db):
-    user = User.objects.create(username="noperm", is_active=True, is_staff=True)
-    client.force_login(user)
-    response = client.get("/dashboard/")
-    assert response.status_code == 403
 
 
 def test_superusers_allowed(admin_client, dashboard_db):
@@ -38,9 +31,9 @@ def test_must_have_execute_sql_permission(
     staff_with_permission.user_permissions.add(execute_sql_permission)
     assert staff_with_permission.has_perm("django_sql_dashboard.execute_sql")
     client.force_login(not_staff)
-    assert client.get("/dashboard/").status_code == 302
+    assert client.get("/dashboard/").status_code == 403
     client.force_login(staff_no_permisssion)
-    assert client.get("/dashboard/").status_code == 302
+    assert client.get("/dashboard/").status_code == 403
     client.force_login(staff_with_permission)
     assert client.get("/dashboard/").status_code == 200
 

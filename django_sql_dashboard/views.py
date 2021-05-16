@@ -6,7 +6,7 @@ from io import StringIO
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import login_required
 from django.db import connections
 from django.db.utils import ProgrammingError
 from django.forms import CharField, ModelForm, Textarea
@@ -53,8 +53,10 @@ class SaveDashboardForm(ModelForm):
         }
 
 
-@permission_required("django_sql_dashboard.execute_sql", raise_exception=True)
+@login_required
 def dashboard_index(request):
+    if not request.user.has_perm("django_sql_dashboard.execute_sql"):
+        return HttpResponseForbidden("You do not have permission to execute SQL")
     sql_queries = []
     too_long_so_use_post = False
     save_form = SaveDashboardForm(prefix="_save")

@@ -10,6 +10,17 @@ class DashboardQueryInline(admin.TabularInline):
     model = DashboardQuery
     extra = 1
 
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return True
+        return obj.user_can_edit(request.user)
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.has_perm("django_sql_dashboard.execute_sql"):
+            return ("sql",)
+        else:
+            return tuple()
+
 
 @admin.register(Dashboard)
 class DashboardAdmin(admin.ModelAdmin):

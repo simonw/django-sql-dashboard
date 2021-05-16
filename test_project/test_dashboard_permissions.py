@@ -1,6 +1,7 @@
 from enum import Enum
 
 import pytest
+from bs4 import BeautifulSoup
 from django.contrib.auth.models import Group, User
 
 from django_sql_dashboard.models import Dashboard
@@ -314,11 +315,21 @@ def test_user_can_edit(
         slug="owned_by_other_superuser", owned_by=other, edit_policy="superuser"
     )
     dashboard_obj = Dashboard.objects.get(slug=dashboard)
+    dashboard_obj.queries.create(sql="select 1 + 1")
     assert dashboard_obj.user_can_edit(user) == expected
     if dashboard != "owned_by_other_staff":
         # This test doesn't make sense for the 'staff' one, they cannot access admin
         # https://github.com/simonw/django-sql-dashboard/issues/44#issuecomment-835653787
-        assert can_user_edit_using_admin(client, user, dashboard_obj) == expected
+        can_edit_using_admin = can_user_edit_using_admin(client, user, dashboard_obj)
+        assert can_edit_using_admin == expected
+        if can_edit_using_admin:
+            # Check that they cannot edit the SQL queries, because they do not
+            # have the execute_sql permisssion
+            assert not user.has_perm("django_sql_dashboard.execute_sql")
+            html = get_admin_change_form_html(client, user, dashboard_obj)
+            soup = BeautifulSoup(html, "html5lib")
+            assert soup.select("td.field-sql p")[0].text == "select 1 + 1"
+
     user.is_staff = True
     user.save()
     assert dashboard_obj.user_can_edit(user) == expected_if_staff
@@ -329,15 +340,23 @@ def test_user_can_edit(
     assert can_user_edit_using_admin(client, user, dashboard_obj)
 
 
-def can_user_edit_using_admin(client, user, dashboard):
+def get_admin_change_form_html(client, user, dashboard):
     # Only staff can access the admin:
+    original_is_staff = user.is_staff
     user.is_staff = True
     user.save()
     client.force_login(user)
     response = client.get(dashboard.get_edit_url())
+    if not original_is_staff:
+        user.is_staff = False
+        user.save()
+    return response.content.decode("utf-8")
+
+
+def can_user_edit_using_admin(client, user, dashboard):
     return (
-        b'<input type="text" name="title" class="vTextField" maxlength="128" id="id_title">'
-        in response.content
+        '<input type="text" name="title" class="vTextField" maxlength="128" id="id_title">'
+        in get_admin_change_form_html(client, user, dashboard)
     )
 
 

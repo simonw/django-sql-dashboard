@@ -103,6 +103,29 @@ Some hosting environments such as Heroku charge extra for the ability to create 
 ```
 The `-c default_transaction_read_only=on` option here should prevent accidental writes from being executed, but note that dashboard users in this configuration will be able to access _all tables_ including tables that might contain sensitive information. Only use this trick if you are confident you fully understand the implications!
 
+### dj-database-url and django-configurations
+
+If you are using [dj-database-url](https://github.com/jacobian/dj-database-url) or [django-configurations](https://github.com/jazzband/django-configurations) _(with `database` extra requirement)_, your `DATABASES` section should look something like this:
+
+```python
+import dj_database_url
+
+# ...
+
+DATABASES = {
+    "default": dj_database_url.config(env="DATABASE_URL"),
+    "dashboard": dj_database_url.config(env="DATABASE_DASHBOARD_URL"),
+}
+```
+
+You can define the two database url variables in your environment like this:
+
+```ini
+DATABASE_URL=postgresql://read_write_user:read_write_password@dbhost.example.com:5432/mydb
+DATABASE_DASHBOARD_URL=postgresql://read_write_user:read_write_password@dbhost.example.com:5432/mydb?options=-c%20default_transaction_read_only%3Don%20-c%20statement_timeout%3D100
+```
+
+
 ## Additional settings
 
 You can customize the following settings in Django's `settings.py` module:

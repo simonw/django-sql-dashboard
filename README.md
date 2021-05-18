@@ -30,3 +30,7 @@ Full documentation is at [django-sql-dashboard.datasette.io](https://django-sql-
 ## Screenshot
 
 <img width="1006" alt="Screenshot showing a SQL query that produces a table and one that produces a bar chart" src="https://user-images.githubusercontent.com/9599/116013366-b9026300-a5e4-11eb-85f5-3dd655acc949.png">
+
+## Alternatives
+
+- [django-sql-explorer](https://github.com/groveco/django-sql-explorer) provides a related set of functionality that also works against database backends other than PostgreSQL

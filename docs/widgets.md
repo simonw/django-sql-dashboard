@@ -50,6 +50,14 @@ To display a progress bar, return columns `total_count` and `completed_count`.
 select 1203 as total_count, 755 as completed_count;
 ```
 
+This SQL pattern can be useful for constructing progress bars:
+```sql
+select (
+  select count(*) from task
+) as total_count, (
+  select count(*) from task where resolved_at is not null
+) as completed_count
+```
 ![Output of the progress bar widget](completed_count-total_count.png)
 
 Progress bar live demo: [simonwillison.net/dashboard/progress-bar-demo/](https://simonwillison.net/dashboard/progress-bar-demo/)

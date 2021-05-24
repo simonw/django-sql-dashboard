@@ -1,5 +1,5 @@
 {% load django_sql_dashboard %}<div class="query-results" id="query-results-{{ result.index }}">
-  {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
+  {% if saved_dashboard %}<details><summary style="cursor: pointer;">SQL query</summary><pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
     name="sql"
     rows="{{ result.textarea_rows }}"
   >{{ result.sql|default:"" }}</textarea>{% endif %}
@@ -9,7 +9,7 @@
       type="submit"
       value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
     />
-  </p>{% endif %}
+  </p>{% else %}</details>{% endif %}
   {% if result.truncated %}
     <p class="results-truncated">
       Results were truncated

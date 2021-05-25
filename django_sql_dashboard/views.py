@@ -47,7 +47,7 @@ class SaveDashboardForm(ModelForm):
         widgets = {
             "description": Textarea(
                 attrs={
-                    "placeholder": "Optional description, shown at the top of the dashboard page"
+                    "placeholder": "Optional description, shown at the top of the dashboard page (Markdown allowed)"
                 }
             )
         }

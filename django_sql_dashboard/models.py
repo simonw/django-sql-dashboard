@@ -7,7 +7,7 @@ from django.utils import timezone
 class Dashboard(models.Model):
     slug = models.SlugField(unique=True)
     title = models.CharField(blank=True, max_length=128)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, help_text="Optional description (Markdown allowed)")
     owned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

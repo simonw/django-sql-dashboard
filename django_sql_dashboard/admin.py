@@ -39,6 +39,7 @@ class DashboardAdmin(admin.ModelAdmin):
             {"fields": ("view_policy", "edit_policy", "view_group", "edit_group")},
         ),
     )
+    autocomplete_fields = ["owned_by"]
 
     def view_dashboard(self, obj):
         return mark_safe(

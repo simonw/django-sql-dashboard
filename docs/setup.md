@@ -129,7 +129,7 @@ DATABASE_DASHBOARD_URL=postgresql://read_write_user:read_write_password@dbhost.e
 
 ## Django permissions
 
-Access to the `/dashboard/` interface is controlled by the Django permissions system. To grant a Django user or group access, grant them the `django_sql_dashbord.execute_sql` permission. This is displayed in the admin interface as:
+Access to the `/dashboard/` interface is controlled by the Django permissions system. To grant a Django user or group access, grant them the `django_sql_dashboard.execute_sql` permission. This is displayed in the admin interface as:
 
     django_sql_dashboard | dashboard | Can execute arbitrary SQL queries
 

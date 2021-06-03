@@ -55,6 +55,7 @@ def sql_dashboard_bleach(value):
 
 @register.filter
 def sql_dashboard_markdown(value):
+    value = value or ""
     return mark_safe(
         bleach.linkify(
             bleach.clean(

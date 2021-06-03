@@ -140,14 +140,25 @@ def test_big_number_widget(admin_client, dashboard_db):
     ) in html
 
 
-def test_markdown_widget(admin_client, dashboard_db):
+@pytest.mark.parametrize(
+    "sql,expected",
+    (
+        (
+            "select '# Foo\n\n## Bar [link](/)' as markdown",
+            '<h1>Foo</h1>\n<h2>Bar <a href="/" rel="nofollow">link</a></h2>',
+        ),
+        ("select null as markdown", ""),
+    ),
+)
+def test_markdown_widget(admin_client, dashboard_db, sql, expected):
     response = admin_client.post(
         "/dashboard/",
-        {"sql": "select '# Foo\n\n## Bar [link](/)' as markdown"},
+        {"sql": sql},
         follow=True,
     )
+    assert response.status_code == 200
     html = response.content.decode("utf-8")
-    assert '<h1>Foo</h1>\n<h2>Bar <a href="/" rel="nofollow">link</a></h2>' in html
+    assert expected in html
 
 
 def test_html_widget(admin_client, dashboard_db):

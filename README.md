@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/django-sql-dashboard.svg)](https://pypi.org/project/django-sql-dashboard/)
 [![Changelog](https://img.shields.io/github/v/release/simonw/django-sql-dashboard?include_prereleases&label=changelog)](https://github.com/simonw/django-sql-dashboard/releases)
 [![Tests](https://github.com/simonw/django-sql-dashboard/workflows/Test/badge.svg)](https://github.com/simonw/django-sql-dashboard/actions?query=workflow%3ATest)
+[![Documentation Status](https://readthedocs.org/projects/django-sql-dashboard/badge/?version=latest)](http://django-sql-dashboard.datasette.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/simonw/django-sql-dashboard/blob/main/LICENSE)
 
 Django SQL Dashboard provides an authenticated interface for executing read-only SQL queries directly against your PostgreSQL database, bringing a useful subset of [Datasette](https://datasette.io/) to Django.

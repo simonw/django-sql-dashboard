@@ -82,6 +82,11 @@ def test_saved_dashboard(client, admin_client, dashboard_db, saved_dashboard):
     assert b"44" in response.content
     assert b"77" in response.content
     assert b">count<" in response.content
+    # And test markdown support
+    assert (
+        b'<a href="http://example.com/" rel="nofollow">supports markdown</a>'
+        in response.content
+    )
 
 
 def test_many_long_column_names(admin_client, dashboard_db):

@@ -23,7 +23,10 @@ def execute_sql_permission():
 @pytest.fixture
 def saved_dashboard(dashboard_db):
     dashboard = Dashboard.objects.create(
-        slug="test", title="Test dashboard", view_policy="public"
+        slug="test",
+        title="Test dashboard",
+        description="This [supports markdown](http://example.com/)",
+        view_policy="public",
     )
     dashboard.queries.create(sql="select 11 + 33")
     dashboard.queries.create(sql="select 22 + 55")

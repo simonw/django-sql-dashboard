@@ -27,4 +27,6 @@ jobs:
     - name: Run tests
       run: |
         pytest
+    - name: Check formatting
+      run: black . --check
 

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_sql_dashboard', '0003_update_metadata'),
+        ("django_sql_dashboard", "0003_update_metadata"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dashboard',
-            name='description',
-            field=models.TextField(blank=True, help_text='Optional description (Markdown allowed)'),
+            model_name="dashboard",
+            name="description",
+            field=models.TextField(
+                blank=True, help_text="Optional description (Markdown allowed)"
+            ),
         ),
     ]

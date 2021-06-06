@@ -29,7 +29,7 @@ To generate migrations for model changes:
 
 ## Code style
 
-This library uses [Black](https://github.com/psf/black) for code formatting.
+This library uses [Black](https://github.com/psf/black) for code formatting. The correct version of Black will be installed by `pip install -e '.[test]'` - you can run `black .` in the root directory to apply those formatting rules.
 
 ## Documentation
 

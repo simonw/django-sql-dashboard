@@ -42,7 +42,7 @@ select 'Number of states' as label, count(*) as big_number from states;
 
 Big number live demo: [simonwillison.net/dashboard/big-numbers-demo/](https://simonwillison.net/dashboard/big-numbers-demo/)
 
-## Progress bar: total_count, completed_count
+## Progress bar: completed_count, total_count
 
 To display a progress bar, return columns `total_count` and `completed_count`.
 
@@ -62,7 +62,7 @@ select (
 
 Progress bar live demo: [simonwillison.net/dashboard/progress-bar-demo/](https://simonwillison.net/dashboard/progress-bar-demo/)
 
-## Word cloud: wordcloud_word, wordcloud_count
+## Word cloud: wordcloud_count, wordcloud_word
 
 To display a word cloud, return a column `wordcloud_word` containing words with a corresponding `wordcloud_count` column with the frequency of those words.
 

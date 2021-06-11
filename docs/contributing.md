@@ -42,3 +42,93 @@ To build the documentation locally, run the following:
     make livehtml
 
 This will start a live preview server, using [sphinx-autobuild](https://pypi.org/project/sphinx-autobuild/).
+
+## Using Docker Compose
+
+If you're familiar with Docker--or even if you're not--you may awnt to consider using our optional Docker Compose setup.
+
+An advantage of this approach is that it relieves you of setting up any dependencies, such as ensuring that you have the proper version of Python and Postgres and so forth.  On the downside, however, it does require you to familiarize yourself with Docker, which, while relatively easy to use, still has its own learning curve.
+
+To try out the Docker Compose setup, you will first want to [get Docker][] and [install Docker Compose][].
+
+Then, after checking out the code, run the following:
+
+```
+cd django-sql-dashboard
+docker-compose build
+```
+
+At this point, you can start editing code.  To run any development tools such as `pytest` or `black`, just prefix everything with `docker-compose run app`.  For instance, to run the test suite, run:
+
+```
+docker-compose run app python pytest
+```
+
+If this is a hassle, you can instead run a bash shell inside your container:
+
+```
+docker-compose run app bash
+```
+
+At this point, you'll be in a bash shell inside your container, and can run development tools directly.
+
+[get Docker]: https://docs.docker.com/get-docker/
+[install Docker Compose]: https://docs.docker.com/compose/install/
+
+### Using the dashboard interactively
+
+The Docker Compose setup is configured to run a simple test project that you can use to tinker with the dashboard interactively.
+
+To set this up, first run:
+
+```
+docker-compose run app python test_project/manage.py migrate
+docker-compose run app python test_project/manage.py createsuperuser
+```
+
+You will now be prompted to enter details about a new superuser. Once you've done that, run:
+
+```
+docker-compose up
+```
+
+You can now visit the example app's dashboard at http://localhost:8000/dashboard/.
+
+### Editing the documentation
+
+Running `docker-compose up` also starts the documentation system's live preview server.  You can visit it at http://localhost:8001/.
+
+### Changing the default ports
+
+If you are already using ports 8000 and/or 8001 for other things, you can change them.  To do this, create a file in the repository root called `.env` and populate it with the following:
+
+```
+APP_PORT=9000
+DOCS_PORT=9001
+```
+
+You can change the above port values to whatever makes sense for your setup.
+
+Once you next run `docker-compose up` again, the services will be running on the ports you specified in `.env`.
+
+### Updating
+
+The project's Python dependencies are all baked into the container image, which means that whenever they change (or to be safe, whenever you `git pull` new changes to the codebase), you will want to run:
+
+```
+docker-compose build
+```
+
+You may also want to apply any new migrations that were added to the codebase:
+
+```
+docker-compose run app python test_project/manage.py migrate
+```
+
+### Cleaning up
+
+If you somehow get your Docker Compose setup into a broken state, or you decide that you never use Docker Compose again, you can clean everything up by running:
+
+```
+docker-compose down -v
+```

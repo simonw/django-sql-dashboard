@@ -11,4 +11,4 @@ from .settings import *
 # permissions when using test_project interactively.
 DATABASES["dashboard"] = DATABASES["default"]
 
-LOGIN_URL="/admin/login/"
+LOGIN_URL = "/admin/login/"

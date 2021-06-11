@@ -11,6 +11,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings_interactive
       - PYTHONUNBUFFERED=yup
     working_dir: /app/test_project
+    entrypoint: ["./wait-for-postgres.sh"]
     ports:
       - "${APP_PORT:-8000}:${APP_PORT:-8000}"
     command: python manage.py runserver 0.0.0.0:${APP_PORT:-8000}

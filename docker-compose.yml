@@ -1,0 +1,33 @@
+version: "2"
+services:
+  app:
+    build: .
+    links:
+      - db
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgres://appuser:test123@db/test_project
+      - DJANGO_SETTINGS_MODULE=config.settings_interactive
+      - PYTHONUNBUFFERED=yup
+    working_dir: /app/test_project
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 0.0.0.0:8000
+  docs:
+    build: .
+    volumes:
+      - .:/app
+    working_dir: /app/docs
+    ports:
+      - "8001:8001"
+    command: make SPHINXOPTS="--host 0.0.0.0 --port 8001" livehtml
+  db:
+    # Note that this database is only used when we use
+    # test_project interactively; automated tests spin up
+    # their own database inside the app container.
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=test123
+      - POSTGRES_USER=appuser
+      - POSTGRES_DB=test_project

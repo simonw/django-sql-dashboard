@@ -12,16 +12,16 @@ services:
       - PYTHONUNBUFFERED=yup
     working_dir: /app/test_project
     ports:
-      - "8000:8000"
-    command: python manage.py runserver 0.0.0.0:8000
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    command: python manage.py runserver 0.0.0.0:${APP_PORT:-8000}
   docs:
     build: .
     volumes:
       - .:/app
     working_dir: /app/docs
     ports:
-      - "8001:8001"
-    command: make SPHINXOPTS="--host 0.0.0.0 --port 8001" livehtml
+      - "${DOCS_PORT:-8001}:${DOCS_PORT:-8001}"
+    command: make SPHINXOPTS="--host 0.0.0.0 --port ${DOCS_PORT:-8001}" livehtml
   db:
     # Note that this database is only used when we use
     # test_project interactively; automated tests spin up

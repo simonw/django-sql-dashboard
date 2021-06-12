@@ -19,9 +19,12 @@ RUN apt-get update && apt-get install -y \
 COPY docs/requirements.txt .
 RUN pip install -r requirements.txt
 
+ARG GID=1000
+ARG UID=1000
+
 # Set up a non-root user.  Aside from being best practice,
 # we also need to do this because the test suite refuses to
 # run as the root user.
-RUN groupadd -g 1000 appuser && useradd -r -u 1000 -g appuser appuser
+RUN groupadd -g ${GID} appuser && useradd -r -u ${UID} -g appuser appuser
 
 USER appuser

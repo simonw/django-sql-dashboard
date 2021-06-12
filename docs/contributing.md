@@ -111,6 +111,16 @@ You can change the above port values to whatever makes sense for your setup.
 
 Once you next run `docker-compose up` again, the services will be running on the ports you specified in `.env`.
 
+### Changing the default UID and GID
+
+The default settings assume that the user id (UID) and group id (GID) of the account you're using to develop are both 1000.  This is likely to be the case, since that's the UID/GID of the first non-root account on most systems.  However, if your account doesn't match this, you can customize the container to use a different UID/GID.
+
+For instance, if your UID and GID are 1001, you can build your container with the following arguments:
+
+```
+docker-compose build --build-arg UID=1001 --build-arg GID=1001
+```
+
 ### Updating
 
 The project's Python dependencies are all baked into the container image, which means that whenever they change (or to be safe, whenever you `git pull` new changes to the codebase), you will want to run:

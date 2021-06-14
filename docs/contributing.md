@@ -92,7 +92,7 @@ You will now be prompted to enter details about a new superuser. Once you've don
 docker-compose up
 ```
 
-You can now visit the example app's dashboard at http://localhost:8000/dashboard/.
+You can now visit the example app's dashboard at http://localhost:8000/.
 
 ### Editing the documentation
 

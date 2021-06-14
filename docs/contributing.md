@@ -79,20 +79,19 @@ At this point, you'll be in a bash shell inside your container, and can run deve
 
 The Docker Compose setup is configured to run a simple test project that you can use to tinker with the dashboard interactively.
 
-To set this up, first run:
-
-```
-docker-compose run app python test_project/manage.py migrate
-docker-compose run app python test_project/manage.py createsuperuser
-```
-
-You will now be prompted to enter details about a new superuser. Once you've done that, run:
+To use it, run:
 
 ```
 docker-compose up
 ```
 
-You can now visit the example app's dashboard at http://localhost:8000/.
+Then, in a separate terminal, run:
+
+```
+docker-compose run app python test_project/manage.py createsuperuser
+```
+
+You will now be prompted to enter details about a new superuser. Once you've done that, you can visit the example app's dashboard at http://localhost:8000/.  After entering the credentials for the superuser you just created, you will be able to tinker with the dashboard.
 
 ### Editing the documentation
 
@@ -129,11 +128,7 @@ The project's Python dependencies are all baked into the container image, which 
 docker-compose build
 ```
 
-You may also want to apply any new migrations that were added to the codebase:
-
-```
-docker-compose run app python test_project/manage.py migrate
-```
+You will also want to restart `docker-compose up`.
 
 ### Cleaning up
 

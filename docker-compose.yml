@@ -14,7 +14,7 @@ services:
     entrypoint: ["./test_project/wait-for-postgres.sh"]
     ports:
       - "${APP_PORT:-8000}:${APP_PORT:-8000}"
-    command: python test_project/manage.py runserver 0.0.0.0:${APP_PORT:-8000}
+    command: bash -c "python test_project/manage.py migrate && python test_project/manage.py runserver 0.0.0.0:${APP_PORT:-8000}"
   docs:
     build: .
     volumes:

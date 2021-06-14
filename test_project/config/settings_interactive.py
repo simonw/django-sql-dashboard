@@ -10,5 +10,3 @@ from .settings import *
 # our database, there's no need to bother with read-only
 # permissions when using test_project interactively.
 DATABASES["dashboard"] = DATABASES["default"]
-
-LOGIN_URL = "/admin/login/"

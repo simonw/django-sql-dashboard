@@ -62,3 +62,10 @@ class DashboardAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             readonly_fields.append("owned_by")
         return readonly_fields
+
+    def get_queryset(self, request):
+        if request.user.is_superuser:
+            # Superusers should be able to see all dashboards.
+            return super().get_queryset(request)
+        # Otherwise, show only the dashboards the user has edit access to.
+        return Dashboard.get_editable_by_user(request.user)

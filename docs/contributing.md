@@ -45,7 +45,7 @@ This will start a live preview server, using [sphinx-autobuild](https://pypi.org
 
 ## Using Docker Compose
 
-If you're familiar with Docker--or even if you're not--you may awnt to consider using our optional Docker Compose setup.
+If you're familiar with Docker--or even if you're not--you may want to consider using our optional Docker Compose setup.
 
 An advantage of this approach is that it relieves you of setting up any dependencies, such as ensuring that you have the proper version of Python and Postgres and so forth.  On the downside, however, it does require you to familiarize yourself with Docker, which, while relatively easy to use, still has its own learning curve.
 

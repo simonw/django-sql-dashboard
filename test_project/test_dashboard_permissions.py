@@ -334,6 +334,24 @@ def test_user_can_edit(
     user.save()
     assert dashboard_obj.user_can_edit(user) == expected_if_staff
     assert can_user_edit_using_admin(client, user, dashboard_obj) == expected_if_staff
+
+    # Confirm that staff user can see the correct dashboards listed
+    client.force_login(user)
+    dashboard_change_list_response = client.get(
+        "/admin/django_sql_dashboard/dashboard/"
+    )
+    change_list_soup = BeautifulSoup(dashboard_change_list_response.content, "html5lib")
+    visible_in_change_list = [
+        a.text for a in change_list_soup.select("th.field-slug a")
+    ]
+    assert set(visible_in_change_list) == {
+        "owned_by_other_staff",
+        "owned_by_other_group_member",
+        "owned_by_other_loggedin",
+        "owned_by_user",
+    }
+
+    # Promote to superuser
     user.is_superuser = True
     user.save()
     assert dashboard_obj.user_can_edit(user) == expected_if_superuser

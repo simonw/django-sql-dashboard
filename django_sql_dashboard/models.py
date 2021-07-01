@@ -114,7 +114,7 @@ class Dashboard(models.Model):
             cls.objects.filter(
                 models.Q(owned_by=user)
                 | models.Q(edit_policy__in=allowed_policies)
-                | models.Q(view_policy=cls.EditPolicies.GROUP, edit_group__user=user)
+                | models.Q(edit_policy=cls.EditPolicies.GROUP, edit_group__user=user)
             )
         ).distinct()
 

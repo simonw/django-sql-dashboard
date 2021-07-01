@@ -105,3 +105,15 @@ def postgresql_reserved_words(connection):
             cursor.execute("select word from pg_get_keywords() where catcode = 'R'")
             _reserved_words = [row[0] for row in cursor.fetchall()]
     return _reserved_words
+
+
+_sort_re = re.compile('(^.*) order by "[^"]+"( desc)?$', re.DOTALL)
+
+
+def apply_sort(sql, sort_column, is_desc=False):
+    match = _sort_re.match(sql)
+    if match is not None:
+        sql = match.group(1)
+    else:
+        sql = "select * from ({}) as results".format(sql)
+    return sql + ' order by "{}"{}'.format(sort_column, " desc" if is_desc else "")

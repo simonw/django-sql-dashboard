@@ -22,6 +22,7 @@ from psycopg2.extensions import quote_ident
 
 from .models import Dashboard
 from .utils import (
+    apply_sort,
     check_for_base64_upgrade,
     displayable_rows,
     extract_named_parameters,
@@ -268,7 +269,12 @@ def _dashboard_index(
                         )
                     display_rows = displayable_rows(rows[:row_limit])
                     column_details = [
-                        {"name": column, "is_unambiguous": columns.count(column) == 1}
+                        {
+                            "name": column,
+                            "is_unambiguous": columns.count(column) == 1,
+                            "sort_sql": apply_sort(sql, column),
+                            "sort_desc_sql": apply_sort(sql, column, True),
+                        }
                         for column in columns
                     ]
                     query_results.append(

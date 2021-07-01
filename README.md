@@ -30,7 +30,7 @@ Full documentation is at [django-sql-dashboard.datasette.io](https://django-sql-
 
 ## Screenshot
 
-<img width="1006" alt="Screenshot showing a SQL query that produces a table and one that produces a bar chart" src="https://user-images.githubusercontent.com/9599/116013366-b9026300-a5e4-11eb-85f5-3dd655acc949.png">
+<img width="1018" alt="Screenshot showing a SQL query that produces a table and one that produces a bar chart" src="https://user-images.githubusercontent.com/9599/124050883-42ad2300-d9d0-11eb-83e6-44ad85f7ef64.png">
 
 ## Alternatives
 

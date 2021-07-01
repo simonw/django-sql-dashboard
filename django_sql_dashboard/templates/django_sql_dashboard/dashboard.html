@@ -101,7 +101,7 @@
 <ul class="dashboard-columns">
   {% for table in available_tables %}
   <li>
-    <a href="?sql={% filter sign_sql|urlencode %}select count(*) from {{ table.name }}{% endfilter %}&sql={% filter sign_sql|urlencode %}select {{ table.columns }} from {{ table.name }}{% endfilter %}">{{ table.name }}</a>
+    <a href="?sql={% filter sign_sql|urlencode %}select count(*) from {{ table.name }}{% endfilter %}&sql={% autoescape off %}{% filter sign_sql|urlencode %}select {{ table.sql_columns }} from {{ table.name }}{% endfilter %}{% endautoescape %}">{{ table.name }}</a>
     <p>{{ table.columns }}</p>
   </li>
   {% endfor %}

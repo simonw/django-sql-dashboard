@@ -16,12 +16,16 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
+from django.utils.safestring import mark_safe
+
+from psycopg2.extensions import quote_ident
 
 from .models import Dashboard
 from .utils import (
     check_for_base64_upgrade,
     displayable_rows,
     extract_named_parameters,
+    postgresql_reserved_words,
     sign_sql,
     unsign_sql,
 )
@@ -137,18 +141,24 @@ def _dashboard_index(
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
     row_limit = getattr(settings, "DASHBOARD_ROW_LIMIT", None) or 100
     connection = connections[alias]
+    reserved_words = postgresql_reserved_words(connection)
     with connection.cursor() as tables_cursor:
         tables_cursor.execute(
             """
             with visible_tables as (
               select table_name
-              from information_schema.tables
-              where table_schema = 'public'
-              order by table_name
+                from information_schema.tables
+                where table_schema = 'public'
+                order by table_name
+            ),
+            reserved_keywords as (
+              select word
+                from pg_get_keywords()
+                where catcode = 'R'
             )
             select
               information_schema.columns.table_name,
-              string_agg(column_name, ', ' order by ordinal_position) as columns
+              array_to_json(array_agg(column_name order by ordinal_position)) as columns
             from
               information_schema.columns
             join
@@ -162,8 +172,19 @@ def _dashboard_index(
               information_schema.columns.table_name
         """
         )
+        fetched = tables_cursor.fetchall()
         available_tables = [
-            {"name": t[0], "columns": t[1]} for t in tables_cursor.fetchall()
+            {
+                "name": row[0],
+                "columns": ", ".join(row[1]),
+                "sql_columns": ", ".join(
+                    [
+                        '"{}"'.format(column) if column in reserved_words else column
+                        for column in row[1]
+                    ]
+                ),
+            }
+            for row in fetched
         ]
 
     parameters = []

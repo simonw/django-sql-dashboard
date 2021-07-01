@@ -93,3 +93,15 @@ def is_valid_base64_json(s):
         return True
     except (json.JSONDecodeError, binascii.Error, UnicodeDecodeError):
         return False
+
+
+_reserved_words = None
+
+
+def postgresql_reserved_words(connection):
+    global _reserved_words
+    if _reserved_words is None:
+        with connection.cursor() as cursor:
+            cursor.execute("select word from pg_get_keywords() where catcode = 'R'")
+            _reserved_words = [row[0] for row in cursor.fetchall()]
+    return _reserved_words

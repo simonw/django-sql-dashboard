@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_sql_dashboard",
+    "extra_models",
 ]
 
 MIDDLEWARE = [

@@ -104,6 +104,21 @@ class Dashboard(models.Model):
         return False
 
     @classmethod
+    def get_editable_by_user(cls, user):
+        allowed_policies = [cls.EditPolicies.LOGGEDIN]
+        if user.is_staff:
+            allowed_policies.append(cls.EditPolicies.STAFF)
+        if user.is_superuser:
+            allowed_policies.append(cls.EditPolicies.SUPERUSER)
+        return (
+            cls.objects.filter(
+                models.Q(owned_by=user)
+                | models.Q(edit_policy__in=allowed_policies)
+                | models.Q(view_policy=cls.EditPolicies.GROUP, edit_group__user=user)
+            )
+        ).distinct()
+
+    @classmethod
     def get_visible_to_user(cls, user):
         allowed_policies = [cls.ViewPolicies.PUBLIC, cls.ViewPolicies.LOGGEDIN]
         if user.is_staff:

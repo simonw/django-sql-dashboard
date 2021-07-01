@@ -1,0 +1,34 @@
+version: "2"
+services:
+  app:
+    build: .
+    links:
+      - db
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgres://appuser:test123@db/test_project
+      - DJANGO_SETTINGS_MODULE=config.settings_interactive
+      - PYTHONUNBUFFERED=yup
+    working_dir: /app
+    entrypoint: ["./test_project/wait-for-postgres.sh"]
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    command: bash -c "python test_project/manage.py migrate && python test_project/manage.py runserver 0.0.0.0:${APP_PORT:-8000}"
+  docs:
+    build: .
+    volumes:
+      - .:/app
+    working_dir: /app/docs
+    ports:
+      - "${DOCS_PORT:-8001}:${DOCS_PORT:-8001}"
+    command: make SPHINXOPTS="--host 0.0.0.0 --port ${DOCS_PORT:-8001}" livehtml
+  db:
+    # Note that this database is only used when we use
+    # test_project interactively; automated tests spin up
+    # their own database inside the app container.
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=test123
+      - POSTGRES_USER=appuser
+      - POSTGRES_DB=test_project

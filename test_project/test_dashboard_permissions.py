@@ -10,7 +10,7 @@ from django_sql_dashboard.models import Dashboard
 def test_anonymous_user_redirected_to_login(client):
     response = client.get("/dashboard/?sql=select+1")
     assert response.status_code == 302
-    assert response.url == "/accounts/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
+    assert response.url == "/admin/login/?next=/dashboard/%3Fsql%3Dselect%2B1"
 
 
 def test_superusers_allowed(admin_client, dashboard_db):

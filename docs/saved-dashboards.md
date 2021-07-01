@@ -4,6 +4,8 @@ A set of SQL queries can be used to create a saved dashboard. Saved dashboards h
 
 You can create a saved dashboard from the interactive dashboard interface (at `/dashboard/`) - execute some queries, then scroll down to the "Save this dashboard" form.
 
+## View permissions
+
 The following viewing permission policies are available:
 
 - `private`: Only the user who created (owns) the dashboard can view
@@ -13,6 +15,10 @@ The following viewing permission policies are available:
 - `group`: Any user who is a member of the `view_group` attached to the dashboard can view
 - `staff`: Any user who is staff can view
 - `superuser`: Any user who is a superuser can view
+
+(edit_permissions)=
+
+## Edit permissions
 
 The edit policy controls which users are allowed to edit a dashboard - defaulting to the user who created that dashboard.
 

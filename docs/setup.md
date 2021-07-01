@@ -133,6 +133,10 @@ Access to the `/dashboard/` interface is controlled by the Django permissions sy
 
     django_sql_dashboard | dashboard | Can execute arbitrary SQL queries
 
+Dashboard editing is currently handled by the Django admin interface. This means a user needs to have **staff** status (allowing them access to the Django admin interface) in order to edit one of their saved dashboards.
+
+The regular Django permission for "can edit dashboard" is ignored. Instead, a permission system that is specific to Django SQL Dashboard is used to control edit permissions. See {ref}`edit_permissions` for details.
+
 ## Additional settings
 
 You can customize the following settings in Django's `settings.py` module:

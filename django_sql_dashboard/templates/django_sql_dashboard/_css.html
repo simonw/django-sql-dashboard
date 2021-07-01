@@ -122,3 +122,58 @@ ul.dashboard-columns li p {
     column-count: auto;
   }
 }
+
+svg.dropdown-menu-icon {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+  cursor: pointer;
+  opacity: 0.8;
+  padding-left: 6px;
+}
+.dropdown-menu {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  line-height: 1.4;
+  font-size: 16px;
+  box-shadow: 2px 2px 2px #aaa;
+  background-color: #fff;
+  z-index: 1000;
+}
+.dropdown-menu ul,
+.dropdown-menu li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.dropdown-menu li {
+  border-bottom: 1px solid #ccc;
+}
+.dropdown-menu li:last-child {
+  border: none;
+}
+.dropdown-menu a:link,
+.dropdown-menu a:visited,
+.dropdown-menu a:hover,
+.dropdown-menu a:focus
+.dropdown-menu a:active {
+  text-decoration: none;
+  display: block;
+  padding: 4px 8px 2px 8px;
+  color: #222;
+  white-space: nowrap;
+}
+.dropdown-menu a:hover {
+  background-color: #eee;
+}
+.dropdown-menu .hook {
+  display: block;
+  position: absolute;
+  top: -5px;
+  left: 6px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #666;
+}

@@ -49,12 +49,12 @@ def test_user_without_execute_sql_permission_does_not_see_count_links_on_saved_d
     response = client.get("/dashboard/test/")
     assert response.status_code == 200
     html = response.content.decode("utf-8")
-    assert ">count<" not in html
+    assert "data-count-url=" not in html
     # If the user DOES have that permission they get the count links
     user.user_permissions.add(execute_sql_permission)
     response = client.get("/dashboard/test/")
     html = response.content.decode("utf-8")
-    assert ">count<" in html
+    assert "data-count-url=" in html
 
 
 def test_saved_dashboard_anonymous_users_denied_by_default(client, dashboard_db):

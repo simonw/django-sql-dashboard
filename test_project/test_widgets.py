@@ -88,9 +88,9 @@ def test_default_widget_column_count_links(admin_client, dashboard_db):
     )
     soup = BeautifulSoup(response.content, "html5lib")
     # Check that first link
-    link = soup.select("thead th a")[0]
-    assert link.text == "count"
-    querystring = link["href"].split("?")[1]
+    th = soup.select("thead th")[0]
+    assert th["data-count-url"]
+    querystring = th["data-count-url"].split("?")[1]
     bits = dict(parse_qsl(querystring))
     assert unsign_sql(bits["sql"])[0] == (
         'select "id", count(*) as n from (SELECT * FROM (\n'
@@ -118,11 +118,11 @@ def test_default_widget_no_count_links_for_ambiguous_columns(
         follow=True,
     )
     soup = BeautifulSoup(response.content, "html5lib")
-    th_links = soup.select("thead th a")
+    ths_with_data_count_url = soup.select("th[data-count-url]")
     if should_have_count_links:
-        assert len(th_links)
+        assert len(ths_with_data_count_url)
     else:
-        assert not len(th_links)
+        assert not len(ths_with_data_count_url)
 
 
 def test_big_number_widget(admin_client, dashboard_db):

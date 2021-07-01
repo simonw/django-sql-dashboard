@@ -81,7 +81,7 @@ def test_saved_dashboard(client, admin_client, dashboard_db, saved_dashboard):
     assert response.status_code == 200
     assert b"44" in response.content
     assert b"77" in response.content
-    assert b">count<" in response.content
+    assert b"data-count-url" in response.content
     # And test markdown support
     assert (
         b'<a href="http://example.com/" rel="nofollow">supports markdown</a>'
@@ -153,7 +153,7 @@ def test_dashboard_uses_post_if_sql_is_too_long(admin_client):
     assert response.status_code == 200
     assert b"1901" in response.content
     # And should not have 'count' links
-    assert b">count<" not in response.content
+    assert b"data-count-url=" not in response.content
 
 
 @pytest.mark.parametrize(

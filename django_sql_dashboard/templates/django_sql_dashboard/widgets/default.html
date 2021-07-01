@@ -42,7 +42,13 @@
     <thead>
       <tr>
         {% for column in result.column_details %}
-          <th alt="{{ column.name }}">{{ column.name }}{% if user_can_execute_sql and column.is_unambiguous and not too_long_so_use_post %} [<a href="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode  %}select "{{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}{{ result.extra_qs }}">count</a>]{% endif %}</th>
+          <th alt="{{ column.name }}"
+            {% if user_can_execute_sql and column.is_unambiguous and not too_long_so_use_post %}
+              data-count-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select "{{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}{{ result.extra_qs }}"
+              data-sort-asc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select * from ({{ result.sql|safe }}) as results order by "{{ column.name }}"{% endfilter %}{{ result.extra_qs }}"
+              data-sort-desc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select * from ({{ result.sql|safe }}) as results order by "{{ column.name }}" desc{% endfilter %}{{ result.extra_qs }}"
+              data-count-distinct-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select count(distinct "{{ column.name }}") from ({{ result.sql|safe }}) as results{% endfilter %}{{ result.extra_qs }}"
+            {% endif %}>{{ column.name }}</th>
         {% endfor %}
       </tr>
     </thead>

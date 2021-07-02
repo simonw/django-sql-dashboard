@@ -135,9 +135,9 @@ You can define your own custom widgets by creating templates with special names.
 
 Decide on the column names that you wish to customize for, then sort them alphabetically and join them with hyphens to create your template name.
 
-For example, you could define a widget that handles results returned as `placename`, `geojson` by creating a template called `geojson-label.html`.
+For example, you could define a widget that handles results returned as `placename`, `geojson` by creating a template called `placename-geojson.html`.
 
-Save that in one of your template directories as `django_sql_dashboard/widgets/geojson-label.html`.
+Save that in one of your template directories as `django_sql_dashboard/widgets/placename-geojson.html`.
 
 Any SQL query that returns exactly the columns `placename` and `geojson` will now be rendered by your custom template file.
 

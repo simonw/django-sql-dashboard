@@ -3,7 +3,7 @@
 To contribute to this library, first checkout the code. Then create a new virtual environment:
 
     cd django-sql-dashboard
-    python -m venv venv
+    python -mvenv venv
     source venv/bin/activate
 
 Or if you are using `pipenv`:

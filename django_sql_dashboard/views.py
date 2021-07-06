@@ -159,7 +159,7 @@ def _dashboard_index(
             )
             select
               information_schema.columns.table_name,
-              array_to_json(array_agg(cast(column_name as text) order by ordinal_position)) as columns
+              array_to_json(array_agg(column_name order by ordinal_position)) as columns
             from
               information_schema.columns
             join

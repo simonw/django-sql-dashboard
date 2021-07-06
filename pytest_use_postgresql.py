@@ -5,10 +5,9 @@ from dj_database_url import parse
 from django.conf import settings
 from testing.postgresql import Postgresql
 
-if os.environ.get("POSTGRESQL_PATH"):
-    _POSTGRESQL = Postgresql(postgres=os.environ["POSTGRESQL_PATH"])
-else:
-    _POSTGRESQL = Postgresql()
+postgres = os.environ.get("POSTGRESQL_PATH")
+initdb = os.environ.get("INITDB_PATH")
+_POSTGRESQL = Postgresql(postgres=postgres, initdb=initdb)
 
 
 @pytest.hookimpl(tryfirst=True)

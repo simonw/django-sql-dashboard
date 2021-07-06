@@ -38,6 +38,7 @@ jobs:
         POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}
       run: |
         export POSTGRESQL_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/postgres"
+        export INITDB_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb"
         pytest
     - name: Check formatting
       run: black . --check

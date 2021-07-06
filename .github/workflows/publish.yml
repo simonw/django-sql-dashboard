@@ -10,6 +10,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+        postgresql-version: [10, 11, 12, 13]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -23,11 +24,23 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
+    - name: Install PostgreSQL
+      env:
+        POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}
+      run: |
+        sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+        wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+        sudo apt-get update
+        sudo apt-get -y install "postgresql-$POSTGRESQL_VERSION"
     - name: Install dependencies
       run: |
         pip install -e '.[test]'
     - name: Run tests
+      env:
+        POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}
       run: |
+        export POSTGRESQL_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/postgres"
+        export INITDB_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb"
         pytest
   deploy:
     runs-on: ubuntu-latest

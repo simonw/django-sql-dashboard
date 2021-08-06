@@ -10,14 +10,14 @@ def test_export_requires_setting(admin_client, dashboard_db):
         assert response.status_code == 403
 
 
-def test_no_export_on_saved_dashboard(
+def test_export_on_saved_dashboard(
     admin_client, dashboard_db, settings, saved_dashboard
 ):
     settings.DASHBOARD_ENABLE_FULL_EXPORT = True
     response = admin_client.get("/dashboard/test/")
     assert response.status_code == 200
     assert b'<pre class="sql">select 22 + 55</pre>' in response.content
-    assert b"Export all as CSV" not in response.content
+    assert b"Export all as CSV" in response.content
 
 
 def test_export_csv(admin_client, dashboard_db, settings):

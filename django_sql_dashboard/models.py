@@ -145,6 +145,12 @@ class DashboardQuery(models.Model):
     dashboard = models.ForeignKey(
         Dashboard, related_name="queries", on_delete=models.CASCADE
     )
+    title = models.CharField(blank=True, max_length=128)
+    description = models.TextField(
+        blank=True, help_text="Optional description (Markdown allowed)"
+    )
+    settings = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
     sql = models.TextField()
 
     def __str__(self):

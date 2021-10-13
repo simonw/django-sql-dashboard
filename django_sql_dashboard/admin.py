@@ -17,7 +17,12 @@ class DashboardQueryInline(admin.TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.has_perm("django_sql_dashboard.execute_sql"):
-            return ("sql", "title", "description", "settings", )
+            return (
+                "sql",
+                "title",
+                "description",
+                "settings",
+            )
         else:
             return tuple()
 

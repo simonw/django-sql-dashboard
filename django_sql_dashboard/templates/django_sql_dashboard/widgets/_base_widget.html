@@ -1,4 +1,8 @@
 <div class="query-results">
+  {% if result.title %}<h2>{{ result.title }}</h2>{% endif %}
+  {% if result.description %}
+    {{ result.description|sql_dashboard_markdown }}
+  {% endif %}
   {% block widget_results %}{% endblock %}
   <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>
   {% if saved_dashboard %}<pre class="sql">{{ result.sql }}</pre>{% else %}<textarea

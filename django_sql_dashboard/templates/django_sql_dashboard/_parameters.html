@@ -1,0 +1,14 @@
+{% if parameters %}
+<h3>Query parameters</h3>
+<div class="query-parameters">
+{% for param in parameters %}
+  <label for="qp{{ forloop.counter }}">{{ param.name }}</label>
+  <input type="text" id="qp{{ forloop.counter }}" name="{{ param.name }}" value="{{ param.value }}">
+{% endfor %}
+</div>
+<input
+  class="btn"
+  type="submit"
+  value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+/>
+{% endif %}

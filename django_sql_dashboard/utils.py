@@ -5,6 +5,7 @@ import urllib.parse
 from collections import namedtuple
 
 from django.core import signing
+from django.conf import settings
 
 SQL_SALT = "django_sql_dashboard:query"
 
@@ -58,20 +59,6 @@ def displayable_rows(rows):
     return fixed
 
 
-_named_parameters_re = re.compile(r"\%\(([^\)]+)\)s")
-
-
-def extract_named_parameters(sql):
-    params = _named_parameters_re.findall(sql)
-    # Validation step: after removing params, are there
-    # any single `%` symbols that will confuse psycopg2?
-    without_params = _named_parameters_re.sub("", sql)
-    without_double_percents = without_params.replace("%%", "")
-    if "%" in without_double_percents:
-        raise ValueError(r"Found a single % character")
-    return params
-
-
 def check_for_base64_upgrade(queries):
     if not queries:
         return
@@ -117,3 +104,52 @@ def apply_sort(sql, sort_column, is_desc=False):
     else:
         sql = "select * from ({}) as results".format(sql)
     return sql + ' order by "{}"{}'.format(sort_column, " desc" if is_desc else "")
+
+
+class Parameter:
+    extract_re = re.compile(r"\%\(([^\)]+)\)s")
+
+    def __init__(self, name):
+        self.name = name
+        self.default_value = ""
+
+    @property
+    def value(self):
+        return self._value if hasattr(self, "_value") else self.default_value
+
+    @value.setter
+    def value(self, new_value):
+        self._value = new_value if new_value != "" else self.default_value
+    
+    @classmethod
+    def extract(cls, sql: str, value_sources: list[dict[str, str]], target: list=[]):
+        new_params = [cls(name) for (name) in cls.extract_re.findall(sql)]
+
+        # Ensure parameters are added only once
+        for new_param in new_params:
+            previous_param = next((param for param in target if param.name == new_param.name), None)
+            if not previous_param:
+                target.append(new_param)
+
+        # Validation step: after removing params, are there
+        # any single `%` symbols that will confuse psycopg2?
+        without_params = cls.extract_re.sub("", sql)
+        without_double_percents = without_params.replace("%%", "")
+        if "%" in without_double_percents:
+            raise ValueError(r"Found a single % character")
+                
+        # Read values form sources
+        for param in target:
+            for source in value_sources:
+                if param.name in source:
+                    param.value = source[param.name]
+                    break
+
+        return target
+    
+    @classmethod
+    def execute(cls, cursor, sql: str, parameters: list=[]):
+        values = { param.name: param.value for param in parameters }
+        cursor.execute(sql, values)
+
+PARAMETER_CLASS = getattr(settings, "DASHBOARD_PARAMETER_CLASS", Parameter)

@@ -6,6 +6,7 @@ from collections import namedtuple
 
 from django.core import signing
 from django.conf import settings
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 SQL_SALT = "django_sql_dashboard:query"
@@ -136,8 +137,8 @@ class Parameter:
         self._value = self.get_sanitized(new_value) if new_value != "" else self.default_value
    
     def form_control(self):
-        return mark_safe(f"""<label for="qp_{self.name}">{self.name}</label>
-<input type="text" id="qp_{self.name}" name="{self.name}" value="{self.value if self.value is not None else ""}">""")
+        return mark_safe(f"""<label for="qp_{escape(self.name)}">{escape(self.name)}</label>
+<input type="text" id="qp_{escape(self.name)}" name="{escape(self.name)}" value="{escape(self.value) if self.value is not None else ""}">""")
 
     @classmethod
     def extract(cls, sql: str, value_sources: list[dict[str, str]], target: list=[]):

@@ -300,12 +300,12 @@ def _dashboard_index(
     if dashboard and dashboard.title:
         html_title = dashboard.title
 
-    # Add named parameter values, if any exist
+    # Add named parameter values to the page title, when they are distinct from the default values
     provided_values = {
-        key: value for key, value in parameter_values.items() if value.strip()
+        param.name: param.value for param in parameters if param.value != param.default_value
     }
     if provided_values:
-        if len(provided_values) == 1:
+        if len(parameters) == 1:
             html_title += ": {}".format(list(provided_values.values())[0])
         else:
             html_title += ": {}".format(

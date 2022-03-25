@@ -110,9 +110,22 @@ def apply_sort(sql, sort_column, is_desc=False):
 class Parameter:
     extract_re = re.compile(r"\%\(([^\)]+)\)s")
 
-    def __init__(self, name):
+    def __init__(self, name, default_value=""):
         self.name = name
-        self.default_value = ""
+        self.default_value = self.get_sanitized(default_value, for_default=True)
+
+    def ensure_consistency(self, previous):
+        if self.name != previous.name:
+            raise ValueError("Invalid name for parameter '%s': previously registered with name '%s'" % (self.name, previous.name))
+        if self.default_value != "" and self.default_value != previous.default_value:
+            raise ValueError("Invalid default value '%s' for parameter '%s': previously registered with default value '%s'" % (self.default_value, self.name, previous.default_value))
+
+    def get_sanitized(self, value, for_default=False):
+        if value is None or (for_default and value == "null"):
+            return None # represents DB null value
+        if not isinstance(value, str):
+            raise ValueError("Invalid %svalue for parameter '%s': '%s'" % ("default " if for_default else "", self.name, type(value).__name__))
+        return value
 
     @property
     def value(self):
@@ -120,20 +133,22 @@ class Parameter:
 
     @value.setter
     def value(self, new_value):
-        self._value = new_value if new_value != "" else self.default_value
-
+        self._value = self.get_sanitized(new_value) if new_value != "" else self.default_value
+   
     def form_control(self):
         return mark_safe(f"""<label for="qp_{self.name}">{self.name}</label>
 <input type="text" id="qp_{self.name}" name="{self.name}" value="{self.value if self.value is not None else ""}">""")
 
     @classmethod
     def extract(cls, sql: str, value_sources: list[dict[str, str]], target: list=[]):
-        new_params = [cls(name) for (name) in cls.extract_re.findall(sql)]
+        new_params = [cls(*found) for found in cls.extract_re.findall(sql)]
 
         # Ensure parameters are added only once
         for new_param in new_params:
             previous_param = next((param for param in target if param.name == new_param.name), None)
-            if not previous_param:
+            if previous_param:
+                new_param.ensure_consistency(previous_param)
+            else:
                 target.append(new_param)
 
         # Validation step: after removing params, are there
@@ -158,3 +173,8 @@ class Parameter:
         cursor.execute(sql, values)
 
 PARAMETER_CLASS = getattr(settings, "DASHBOARD_PARAMETER_CLASS", Parameter)
+if isinstance(PARAMETER_CLASS, str):
+    from importlib import import_module
+
+    [module_name, class_name] = PARAMETER_CLASS.rsplit('.', 1)
+    PARAMETER_CLASS = getattr(import_module(module_name), class_name)

@@ -141,10 +141,13 @@ class Parameter:
 
     @classmethod
     def extract(cls, sql: str, value_sources: list[dict[str, str]], target: list=[]):
-        new_params = [cls(*found) for found in cls.extract_re.findall(sql)]
+        for found in cls.extract_re.findall(sql):
+            # Ensure 'found' is an iterable of capturing groups, even if there is only one capturing group in the regex
+            if isinstance(found, str):
+                found = [found]
+            new_param = cls(*found)
 
-        # Ensure parameters are added only once
-        for new_param in new_params:
+            # Ensure parameters are added only once
             previous_param = next((param for param in target if param.name == new_param.name), None)
             if previous_param:
                 new_param.ensure_consistency(previous_param)

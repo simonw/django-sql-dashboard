@@ -26,12 +26,12 @@ def test_parameter_form(admin_client, dashboard_db):
     html = response.content.decode("utf-8")
     # Form should have three form fields
     for fragment in (
-        '<label for="qp1">foo</label>',
-        '<input type="text" id="qp1" name="foo" value="">',
-        '<label for="qp2">bar</label>',
-        '<input type="text" id="qp2" name="bar" value="">',
-        '<label for="qp3">baz</label>',
-        '<input type="text" id="qp3" name="baz" value="">',
+        '<label for="qp_foo">foo</label>',
+        '<input type="text" id="qp_foo" name="foo" value="">',
+        '<label for="qp_bar">bar</label>',
+        '<input type="text" id="qp_bar" name="bar" value="">',
+        '<label for="qp_baz">baz</label>',
+        '<input type="text" id="qp_baz" name="baz" value="">',
     ):
         assert fragment in html
 

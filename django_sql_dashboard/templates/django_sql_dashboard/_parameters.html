@@ -1,0 +1,13 @@
+{% if parameters %}
+<h3>Query parameters</h3>
+<div class="query-parameters">
+{% for param in parameters %}
+  {{ param.form_control }}
+{% endfor %}
+</div>
+<input
+  class="btn"
+  type="submit"
+  value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+/>
+{% endif %}

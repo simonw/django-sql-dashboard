@@ -30,20 +30,7 @@
 </p>
 
 <form action="{{ request.path }}" method="GET">
-  {% if parameter_values %}
-    <h3>Query parameters</h3>
-    <div class="query-parameters">
-    {% for name, value in parameter_values %}
-        <label for="qp{{ forloop.counter }}">{{ name }}</label>
-        <input type="text" id="qp{{ forloop.counter }}" name="{{ name }}" value="{{ value }}">
-    {% endfor %}
-    </div>
-    <input
-      class="btn"
-      type="submit"
-      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
-    />
-  {% endif %}
+  {% include "django_sql_dashboard/_parameters.html" %}
   {% for result in query_results %}
     {% include result.templates with result=result %}
   {% endfor %}

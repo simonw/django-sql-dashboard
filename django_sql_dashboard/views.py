@@ -25,7 +25,7 @@ from .utils import (
     apply_sort,
     check_for_base64_upgrade,
     displayable_rows,
-    PARAMETER_CLASS,
+    extract_named_parameters,
     postgresql_reserved_words,
     sign_sql,
     unsign_sql,
@@ -192,7 +192,10 @@ def _dashboard_index(
     sql_query_parameter_errors = []
     for sql in sql_queries:
         try:
-            PARAMETER_CLASS.extract(sql, value_sources=[request.POST, request.GET], target=parameters)
+            extracted = extract_named_parameters(sql)
+            for p in extracted:
+                if p not in parameters:
+                    parameters.append(p)
             sql_query_parameter_errors.append(False)
         except ValueError as e:
             if "%" in sql:
@@ -202,9 +205,9 @@ def _dashboard_index(
             else:
                 sql_query_parameter_errors.append(str(e))
     parameter_values = {
-        parameter.name: parameter.value
+        parameter: request.POST.get(parameter, request.GET.get(parameter, ""))
         for parameter in parameters
-        if parameter.name != "sql"
+        if parameter != "sql"
     }
     extra_qs = "&{}".format(urlencode(parameter_values)) if parameter_values else ""
     results_index = -1
@@ -247,7 +250,7 @@ def _dashboard_index(
                     # Running a SELECT prevents future SET TRANSACTION READ WRITE:
                     cursor.execute("SELECT 1;")
                     cursor.fetchall()
-                    PARAMETER_CLASS.execute(cursor, sql, parameters)
+                    cursor.execute(sql, parameter_values)
                     try:
                         rows = list(cursor.fetchmany(row_limit + 1))
                     except ProgrammingError as e:
@@ -300,12 +303,12 @@ def _dashboard_index(
     if dashboard and dashboard.title:
         html_title = dashboard.title
 
-    # Add named parameter values to the page title, when they are distinct from the default values
+    # Add named parameter values, if any exist
     provided_values = {
-        param.name: param.value for param in parameters if param.value != param.default_value
+        key: value for key, value in parameter_values.items() if value.strip()
     }
     if provided_values:
-        if len(parameters) == 1:
+        if len(provided_values) == 1:
             html_title += ": {}".format(list(provided_values.values())[0])
         else:
             html_title += ": {}".format(
@@ -340,7 +343,7 @@ def _dashboard_index(
         "user_can_execute_sql": user_can_execute_sql,
         "user_can_export_data": getattr(settings, "DASHBOARD_ENABLE_FULL_EXPORT", None)
         and user_can_execute_sql,
-        "parameters": parameters,
+        "parameter_values": parameter_values.items(),
         "too_long_so_use_post": too_long_so_use_post,
         "saved_dashboards": saved_dashboards,
     }
@@ -407,7 +410,10 @@ def export_sql_results(request):
     assert format in ("csv", "tsv")
     sqls = request.POST.getlist("sql")
     sql = sqls[int(sql_index)]
-    parameters = PARAMETER_CLASS.extract(sql, value_sources=[request.POST])
+    parameter_values = {
+        parameter: request.POST.get(parameter, "")
+        for parameter in extract_named_parameters(sql)
+    }
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
     # Decide on filename
     sql_hash = hashlib.sha256(sql.encode("utf-8")).hexdigest()[:6]
@@ -437,7 +443,7 @@ def export_sql_results(request):
 
     def rows():
         try:
-            PARAMETER_CLASS.execute(cursor, sql, parameters)
+            cursor.execute(sql, parameter_values)
             done_header = False
             while True:
                 records = cursor.fetchmany(size=2000)

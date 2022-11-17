@@ -165,13 +165,15 @@ def test_html_widget(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",
         {
-            "sql": "select '<h1>Hi</h1><script>alert(\"evil\")</script><p>There</p>' as markdown"
+            "sql": "select '<h1>Hi</h1><script>alert(\"evil\")</script><p>There<br>And</p>' as markdown"
         },
         follow=True,
     )
     html = response.content.decode("utf-8")
     assert (
-        "<h1>Hi</h1>\n" '&lt;script&gt;alert("evil")&lt;/script&gt;\n' "<p>There</p>"
+        "<h1>Hi</h1>\n"
+        '&lt;script&gt;alert("evil")&lt;/script&gt;\n'
+        "<p>There<br>And</p>"
     ) in html
 
 

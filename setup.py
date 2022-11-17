@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-VERSION = "1.0.1"
+VERSION = "1.1"
 
 
 def get_long_description():
@@ -40,7 +40,7 @@ setup(
     install_requires=["Django>=3.0", "markdown", "bleach"],
     extras_require={
         "test": [
-            "black==21.5b2",
+            "black>=22.3.0",
             "psycopg2",
             "pytest",
             "pytest-django==4.2.0",

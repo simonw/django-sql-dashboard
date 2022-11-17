@@ -127,7 +127,15 @@ def test_dashboard_sql_errors(admin_client, sql, expected_error):
 
 @pytest.mark.parametrize(
     "sql,expected_columns,expected_rows",
-    (("select 'abc' as one, 'bcd' as one", ["one", "one"], [["abc", "bcd"]]),),
+    (
+        ("select 'abc' as one, 'bcd' as one", ["one", "one"], [["abc", "bcd"]]),
+        ("select ARRAY[1, 2, 3]", ["array"], [["[\n  1,\n  2,\n  3\n]"]]),
+        (
+            "select ARRAY[TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02']",
+            ["array"],
+            [['[\n  "2004-10-19 08:23:54+00:00"\n]']],
+        ),
+    ),
 )
 def test_dashboard_sql_queries(admin_client, sql, expected_columns, expected_rows):
     response = admin_client.post("/dashboard/", {"sql": sql}, follow=True)

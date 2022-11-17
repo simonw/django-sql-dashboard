@@ -52,7 +52,7 @@ def displayable_rows(rows):
         fixed_row = []
         for cell in row:
             if isinstance(cell, (dict, list)):
-                cell = json.dumps(cell)
+                cell = json.dumps(cell, default=str)
             fixed_row.append(cell)
         fixed.append(fixed_row)
     return fixed

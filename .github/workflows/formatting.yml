@@ -1,9 +1,9 @@
-name: Test
+name: Format
 
 on: [push, pull_request]
 
 jobs:
-  test:
+  format:
     runs-on: ubuntu-latest
     strategy:
       matrix:

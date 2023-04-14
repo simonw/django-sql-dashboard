@@ -197,9 +197,7 @@ def test_html_widget(admin_client, dashboard_db):
     )
     html = response.content.decode("utf-8")
     assert (
-        "<h1>Hi</h1>"
-        '&lt;script&gt;alert("evil")&lt;/script&gt;'
-        "<p>There<br>And</p>"
+        "<h1>Hi</h1>" '&lt;script&gt;alert("evil")&lt;/script&gt;' "<p>There<br>And</p>"
     ) in html
 
 

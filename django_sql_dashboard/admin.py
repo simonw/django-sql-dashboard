@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from .models import Dashboard, DashboardQuery
 
 
-class DashboardQueryInline(admin.TabularInline):
+class DashboardQueryInline(admin.StackedInline):
     model = DashboardQuery
     extra = 1
 

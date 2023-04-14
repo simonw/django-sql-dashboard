@@ -146,12 +146,22 @@ class DashboardQuery(models.Model):
         Dashboard, related_name="queries", on_delete=models.CASCADE
     )
     title = models.CharField(blank=True, max_length=128)
+    sql = models.TextField(verbose_name="SQL query")
+    created_at = models.DateTimeField(default=timezone.now)
     description = models.TextField(
         blank=True, help_text="Optional description (Markdown allowed)"
     )
-    settings = models.JSONField(blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    sql = models.TextField()
+    template = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Template to use for rendering this query. Leave blank to use the default template or fetch based on the column names.",
+    )
+    settings = models.JSONField(
+        blank=True,
+        null=True,
+        default=dict,
+        help_text="Settings for this query (JSON). These settings are passed to the template.",
+    )
 
     def __str__(self):
         return self.sql

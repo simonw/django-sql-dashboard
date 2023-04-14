@@ -8,20 +8,16 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import connections
-from django.db.models import query
 from django.db.utils import ProgrammingError
-from django.forms import CharField, ModelForm, Textarea, inlineformset_factory
+from django.forms import CharField, ModelForm, Textarea
 from django.http.response import (
     HttpResponseForbidden,
     HttpResponseRedirect,
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
-from django.utils.safestring import mark_safe
 
-from psycopg2.extensions import quote_ident
-
-from .models import Dashboard, DashboardQuery
+from .models import Dashboard
 from .utils import (
     apply_sort,
     check_for_base64_upgrade,
@@ -59,26 +55,6 @@ class SaveDashboardForm(ModelForm):
         }
 
 
-DashboardQueryFormSet = inlineformset_factory(
-    Dashboard,
-    DashboardQuery,
-    fields=(
-        "title",
-        "description",
-        "sql",
-    ),
-    widgets={
-        "description": Textarea(
-            attrs={
-                "placeholder": "Optional description, markdown allowed",
-                "rows": 4,
-            }
-        )
-    },
-    # extra=1,
-)
-
-
 @login_required
 def dashboard_index(request):
     if not request.user.has_perm("django_sql_dashboard.execute_sql"):
@@ -86,7 +62,6 @@ def dashboard_index(request):
     sql_queries = []
     too_long_so_use_post = False
     save_form = SaveDashboardForm(prefix="_save")
-    save_query_form = DashboardQueryFormSet(prefix="_save_query")
     if request.method == "POST":
         # Is this an export?
         if any(
@@ -136,14 +111,6 @@ def dashboard_index(request):
             sql_queries.append(sql)
         else:
             unverified_sql_queries.append(sql)
-    save_query_form_data = {
-        '_save_query-TOTAL_FORMS': str(len(sql_queries) + 1),
-        '_save_query-INITIAL_FORMS': str(0),
-    }
-    # for k, sql in enumerate(sql_queries):
-    #     save_query_form_data[f"_save_query-{k}-sql"] = sql
-    save_query_form = DashboardQueryFormSet(initial=[{"sql": sql} for sql in sql_queries], prefix="_save_query")
-    print(save_query_form.as_table())
     if getattr(settings, "DASHBOARD_UPGRADE_OLD_BASE64_LINKS", None):
         redirect_querystring = check_for_base64_upgrade(sql_queries)
         if redirect_querystring:
@@ -153,7 +120,7 @@ def dashboard_index(request):
         sql_queries,
         unverified_sql_queries=unverified_sql_queries,
         too_long_so_use_post=too_long_so_use_post,
-        extra_context={"save_form": save_form, "save_query_form": save_query_form},
+        extra_context={"save_form": save_form},
     )
 
 
@@ -243,6 +210,9 @@ def _dashboard_index(
     results_index = -1
     if sql_queries:
         for sql, parameter_error in zip(sql_queries, sql_query_parameter_errors):
+            query_object = None
+            if dashboard:
+                query_object = dashboard.queries.filter(sql=sql).first()
             results_index += 1
             sql = sql.strip().rstrip(";")
             base_error_result = {
@@ -258,6 +228,7 @@ def _dashboard_index(
                 "extra_qs": extra_qs,
                 "error": None,
                 "templates": ["django_sql_dashboard/widgets/error.html"],
+                "query": query_object,
             }
             if parameter_error:
                 query_results.append(
@@ -297,6 +268,11 @@ def _dashboard_index(
                             0,
                             "django_sql_dashboard/widgets/" + template_name,
                         )
+                    if query_object and query_object.template:
+                        templates.insert(
+                            0,
+                            "django_sql_dashboard/widgets/" + query_object.template,
+                        )
                     display_rows = displayable_rows(rows[:row_limit])
                     column_details = [
                         {
@@ -321,6 +297,7 @@ def _dashboard_index(
                             "extra_qs": extra_qs,
                             "duration_ms": duration_ms,
                             "templates": templates,
+                            "query": query_object,
                         }
                     )
                 finally:

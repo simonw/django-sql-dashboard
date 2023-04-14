@@ -92,7 +92,6 @@ def test_default_widget_column_count_links(admin_client, dashboard_db):
     assert th["data-count-url"]
     querystring = th["data-count-url"].split("?")[1]
     bits = dict(parse_qsl(querystring))
-    print(unsign_sql(bits["sql"])[0])
     assert unsign_sql(bits["sql"])[0] == (
         'select "id", count(*) as n from (SELECT * FROM (\n'
         "                VALUES (1, %(label)s, 4.5), "

@@ -1,7 +1,9 @@
 {% load django_sql_dashboard %}<div class="query-results" id="query-results-{{ result.index }}">
   {% if result.query %}
   {% if result.query.title %}<h2>{{ result.query.title }}</h2>{% endif %}
-  {% if result.query.description %}{{ result.query.description|sql_dashboard_markdown }}{% endif %}
+  {% if result.query.description %}
+    {{ result.query.description|sql_dashboard_markdown }}
+  {% endif %}
   {% endif %}
   {% if saved_dashboard %}<details><summary style="cursor: pointer;">SQL query</summary><pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
     name="sql"

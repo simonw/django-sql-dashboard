@@ -4,6 +4,7 @@ import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
 
+from django_sql_dashboard.models import Dashboard
 from django_sql_dashboard.utils import unsign_sql
 
 
@@ -125,6 +126,31 @@ def test_default_widget_no_count_links_for_ambiguous_columns(
         assert not len(ths_with_data_count_url)
 
 
+def test_custom_query_widget(admin_client, dashboard_db):
+    response = admin_client.post(
+        "/dashboard/",
+        {
+            "sql": "select '<h1>Hi</h1>' as html, 1 as number",
+            "_save-title": "",
+            "_save-slug": "test-query-template",
+            "_save-description": "",
+            "_save-view_policy": "private",
+            "_save-view_group": "",
+            "_save-edit_policy": "private",
+            "_save-edit_group": "",
+        },
+        follow=True,
+    )
+    dashboard = Dashboard.objects.get(slug="test-query-template")
+    query = dashboard.queries.first()
+    query.template = "html"
+    query.save()
+
+    response = admin_client.get("/dashboard/test-query-template/")
+    html = response.content.decode("utf-8")
+    assert "<h1>Hi</h1>" in html
+
+
 def test_big_number_widget(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",
@@ -165,14 +191,14 @@ def test_html_widget(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",
         {
-            "sql": "select '<h1>Hi</h1><script>alert(\"evil\")</script><p>There<br>And</p>' as markdown"
+            "sql": "select '<h1>Hi</h1><script>alert(\"evil\")</script><p>There<br>And</p>' as html"
         },
         follow=True,
     )
     html = response.content.decode("utf-8")
     assert (
-        "<h1>Hi</h1>\n"
-        '&lt;script&gt;alert("evil")&lt;/script&gt;\n'
+        "<h1>Hi</h1>"
+        '&lt;script&gt;alert("evil")&lt;/script&gt;'
         "<p>There<br>And</p>"
     ) in html
 

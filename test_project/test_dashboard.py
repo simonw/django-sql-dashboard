@@ -232,8 +232,8 @@ def test_dashboard_show_available_tables(admin_client):
         },
         {
             "table": "django_sql_dashboard_dashboardquery",
-            "columns": "id, sql, dashboard_id, _order, created_at, description, settings, title, template",
-            "href_sql": "select id, sql, dashboard_id, _order, created_at, description, settings, title, template from django_sql_dashboard_dashboardquery",
+            "columns": "id, sql, dashboard_id, _order, created_at, description, settings, template, title",
+            "href_sql": "select id, sql, dashboard_id, _order, created_at, description, settings, template, title from django_sql_dashboard_dashboardquery",
         },
         {
             "table": "switches",

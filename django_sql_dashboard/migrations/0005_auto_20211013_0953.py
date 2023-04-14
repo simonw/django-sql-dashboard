@@ -5,7 +5,6 @@ import django.utils.timezone
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_sql_dashboard", "0004_add_description_help_text"),
     ]

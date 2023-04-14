@@ -16,15 +16,10 @@ class DashboardQueryInline(admin.StackedInline):
         return obj.user_can_edit(request.user)
 
     def get_readonly_fields(self, request, obj=None):
+        readonly_fields = ["created_at"]
         if not request.user.has_perm("django_sql_dashboard.execute_sql"):
-            return (
-                "sql",
-                "title",
-                "description",
-                "settings",
-            )
-        else:
-            return tuple()
+            readonly_fields.extend(["sql", "title", "description", "settings"])
+        return readonly_fields
 
 
 @admin.register(Dashboard)

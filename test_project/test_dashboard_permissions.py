@@ -328,7 +328,7 @@ def test_user_can_edit(
             assert not user.has_perm("django_sql_dashboard.execute_sql")
             html = get_admin_change_form_html(client, user, dashboard_obj)
             soup = BeautifulSoup(html, "html5lib")
-            assert soup.select("td.field-sql p")[0].text == "select 1 + 1"
+            assert soup.select("div.field-sql div div")[0].text == "select 1 + 1"
 
     user.is_staff = True
     user.save()

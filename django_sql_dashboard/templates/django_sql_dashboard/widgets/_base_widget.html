@@ -1,7 +1,11 @@
+{% load django_sql_dashboard %}
+
 <div class="query-results">
-  {% if result.title %}<h2>{{ result.title }}</h2>{% endif %}
-  {% if result.description %}
-    {{ result.description|sql_dashboard_markdown }}
+  {% if result.query %}
+  {% if result.query.title %}<h2>{{ result.query.title }}</h2>{% endif %}
+  {% if result.query.description %}
+    {{ result.query.description|sql_dashboard_markdown }}
+  {% endif %}
   {% endif %}
   {% block widget_results %}{% endblock %}
   <details><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">SQL query</summary>

@@ -16,6 +16,7 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
+from django.template.loader import TemplateDoesNotExist, get_template, select_template
 
 from .models import Dashboard
 from .utils import (
@@ -264,14 +265,22 @@ def _dashboard_index(
                     columns = [c.name for c in cursor.description]
                     template_name = ("-".join(sorted(columns))) + ".html"
                     if len(template_name) < 255:
-                        templates.insert(
-                            0,
-                            "django_sql_dashboard/widgets/" + template_name,
-                        )
+                        try:
+                            get_template(
+                                "django_sql_dashboard/widgets/" + template_name
+                            )
+                            templates.insert(
+                                0,
+                                "django_sql_dashboard/widgets/" + template_name,
+                            )
+                        except (TemplateDoesNotExist, OSError):
+                            pass
                     if query_object and query_object.template:
                         templates.insert(
                             0,
-                            "django_sql_dashboard/widgets/" + query_object.template,
+                            "django_sql_dashboard/widgets/"
+                            + query_object.template
+                            + ".html",
                         )
                     display_rows = displayable_rows(rows[:row_limit])
                     column_details = [

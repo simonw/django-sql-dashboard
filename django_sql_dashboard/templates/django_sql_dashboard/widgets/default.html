@@ -3,26 +3,39 @@
   {% if result.query.title %}<h2>{{ result.query.title }}</h2>{% endif %}
   {% if result.query.description %}{{ result.query.description|sql_dashboard_markdown }}{% endif %}
   {% endif %}
-  {% if saved_dashboard %}<details>
-    <summary style="cursor: pointer;">SQL query</summary>
-    <pre class="sql">{{ result.sql }}</pre>{% else %}<textarea name="sql"
-      rows="{{ result.textarea_rows }}">{{ result.sql|default:"" }}</textarea>{% endif %}
-    {% if not saved_dashboard %}<p>
-      <input class="btn" type="submit" value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}" />
-    </p>{% else %}
-  </details>{% endif %}
+  {% if saved_dashboard %}<details><summary style="cursor: pointer;">SQL query</summary><pre class="sql">{{ result.sql }}</pre>{% else %}<textarea
+    name="sql"
+    rows="{{ result.textarea_rows }}"
+  >{{ result.sql|default:"" }}</textarea>{% endif %}
+  {% if not saved_dashboard %}<p>
+    <input
+      class="btn"
+      type="submit"
+      value="Run quer{% if query_results|length > 1 %}ies{% else %}y{% endif %}"
+    />
+  </p>{% else %}</details>{% endif %}
   {% if result.truncated %}
-  <p class="results-truncated">
-    Results were truncated
-    {% if user_can_export_data and not saved_dashboard %}
-    <input class="btn" style="font-size: 0.6rem" type="submit" name="export_csv_{{ result.index }}"
-      value="Export all as CSV" />
-    <input class="btn" style="font-size: 0.6rem" type="submit" name="export_tsv_{{ result.index }}"
-      value="Export all as TSV" />
-    {% endif %}
-  </p>
+    <p class="results-truncated">
+      Results were truncated
+      {% if user_can_export_data and not saved_dashboard %}
+        <input
+          class="btn"
+          style="font-size: 0.6rem"
+          type="submit"
+          name="export_csv_{{ result.index }}"
+          value="Export all as CSV"
+        />
+        <input
+          class="btn"
+          style="font-size: 0.6rem"
+          type="submit"
+          name="export_tsv_{{ result.index }}"
+          value="Export all as TSV"
+        />
+      {% endif %}
+    </p>
   {% else %}
-  <p>{{ result.row_lists|length }} row{{ result.row_lists|length|pluralize }}</p>
+    <p>{{ result.row_lists|length }} row{{ result.row_lists|length|pluralize }}</p>
   {% endif %}
   {% if result.error %}
   <p style="background-color: pink; padding: 1em; margin: 1em 0">
@@ -33,15 +46,13 @@
     <thead>
       <tr>
         {% for column in result.column_details %}
-        <th alt="{{ column.name }}" {% if user_can_execute_sql and column.is_unambiguous and not too_long_so_use_post %}
-          data-count-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select "
-          {{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order
-          by n desc{% endfilter %}{{ result.extra_qs }}"
-          data-sort-asc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}{{ column.sort_sql|safe }}{% endfilter %}{{ result.extra_qs }}"
-          data-sort-desc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}{{ column.sort_desc_sql|safe }}{% endfilter %}{{ result.extra_qs }}"
-          data-count-distinct-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select count(distinct "
-          {{ column.name }}") from ({{ result.sql|safe }}) as results{% endfilter %}{{ result.extra_qs }}" {% endif %}>
-          {{ column.name }}</th>
+          <th alt="{{ column.name }}"
+            {% if user_can_execute_sql and column.is_unambiguous and not too_long_so_use_post %}
+              data-count-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select "{{ column.name }}", count(*) as n from ({{ result.sql|safe }}) as results group by "{{ column.name }}" order by n desc{% endfilter %}{{ result.extra_qs }}"
+              data-sort-asc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}{{ column.sort_sql|safe }}{% endfilter %}{{ result.extra_qs }}"
+              data-sort-desc-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}{{ column.sort_desc_sql|safe }}{% endfilter %}{{ result.extra_qs }}"
+              data-count-distinct-url="{% url 'django_sql_dashboard-index' %}?sql={% filter sign_sql|urlencode %}select count(distinct "{{ column.name }}") from ({{ result.sql|safe }}) as results{% endfilter %}{{ result.extra_qs }}"
+            {% endif %}>{{ column.name }}</th>
         {% endfor %}
       </tr>
     </thead>
@@ -55,38 +66,47 @@
       {% endfor %}
     </tbody>
   </table>
-  <details style="margin-top: 1em;">
-    <summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy and export data</summary>
+  <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy and export data</summary>
     <textarea id="copyable-{{ result.index }}" style="height: 10em">{{ result|sql_dashboard_tsv }}</textarea>
     {% if user_can_export_data and not saved_dashboard %}
-    <div class="export-buttons">
-      <input class="btn" type="submit" name="export_csv_{{ result.index }}" value="Export all as CSV" />
-      <input class="btn" type="submit" name="export_tsv_{{ result.index }}" value="Export all as TSV" />
-    </div>
+      <div class="export-buttons">
+        <input
+          class="btn"
+          type="submit"
+          name="export_csv_{{ result.index }}"
+          value="Export all as CSV"
+        />
+        <input
+          class="btn"
+          type="submit"
+          name="export_tsv_{{ result.index }}"
+          value="Export all as TSV"
+        />
+      </div>
     {% endif %}
   </details>
   <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
   <!-- templates considered: {{ result.templates|join:", " }} -->
   <script>
-    (function () {
-      var ta = document.querySelector("#copyable-{{ result.index }}");
-      var button = document.createElement("button");
-      button.className = "copyable-copy-button btn";
-      button.style.fontSize = '0.6em';
-      button.innerHTML = "Copy to clipboard";
-      button.onclick = (ev) => {
-        ev.preventDefault();
-        ta.select();
-        document.execCommand("copy");
-        button.innerHTML = "Copied!";
-        setTimeout(() => {
+  (function() {
+    var ta = document.querySelector("#copyable-{{ result.index }}");
+    var button = document.createElement("button");
+    button.className = "copyable-copy-button btn";
+    button.style.fontSize = '0.6em';
+    button.innerHTML = "Copy to clipboard";
+    button.onclick = (ev) => {
+      ev.preventDefault();
+      ta.select();
+      document.execCommand("copy");
+      button.innerHTML = "Copied!";
+      setTimeout(() => {
           button.innerHTML = "Copy to clipboard";
-        }, 1500);
-      };
-      var p = document.createElement('p');
-      p.style.marginTop = '0.2em';
-      ta.insertAdjacentElement("afterend", p);
-      p.insertAdjacentElement("afterbegin", button);
-    })();
+      }, 1500);
+    };
+    var p = document.createElement('p');
+    p.style.marginTop = '0.2em';
+    ta.insertAdjacentElement("afterend", p);
+    p.insertAdjacentElement("afterbegin", button);
+  })();
   </script>
 </div>

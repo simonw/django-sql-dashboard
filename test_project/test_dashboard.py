@@ -3,7 +3,6 @@ import urllib.parse
 import pytest
 from bs4 import BeautifulSoup
 from django.core import signing
-from django.db import connections
 
 from django_sql_dashboard.utils import SQL_SALT, is_valid_base64_json, sign_sql
 
@@ -142,9 +141,9 @@ def test_dashboard_sql_queries(admin_client, sql, expected_columns, expected_row
     assert response.status_code == 200
     soup = BeautifulSoup(response.content, "html5lib")
     div = soup.select(".query-results")[0]
-    columns = [th.text.split(" [")[0] for th in div.findAll("th")]
+    columns = [th.text.split(" [")[0].strip() for th in div.findAll("th")]
     trs = div.find("tbody").findAll("tr")
-    rows = [[td.text for td in tr.findAll("td")] for tr in trs]
+    rows = [[td.text.strip() for td in tr.findAll("td")] for tr in trs]
     assert columns == expected_columns
     assert rows == expected_rows
 
@@ -233,8 +232,8 @@ def test_dashboard_show_available_tables(admin_client):
         },
         {
             "table": "django_sql_dashboard_dashboardquery",
-            "columns": "id, sql, dashboard_id, _order",
-            "href_sql": "select id, sql, dashboard_id, _order from django_sql_dashboard_dashboardquery",
+            "columns": "id, sql, dashboard_id, _order, created_at, description, settings, title, template",
+            "href_sql": "select id, sql, dashboard_id, _order, created_at, description, settings, title, template from django_sql_dashboard_dashboardquery",
         },
         {
             "table": "switches",

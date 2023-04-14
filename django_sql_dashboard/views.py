@@ -16,9 +16,7 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
-from django.utils.safestring import mark_safe
-
-from psycopg2.extensions import quote_ident
+from django.template.loader import TemplateDoesNotExist, get_template, select_template
 
 from .models import Dashboard
 from .utils import (
@@ -213,6 +211,9 @@ def _dashboard_index(
     results_index = -1
     if sql_queries:
         for sql, parameter_error in zip(sql_queries, sql_query_parameter_errors):
+            query_object = None
+            if dashboard:
+                query_object = dashboard.queries.filter(sql=sql).first()
             results_index += 1
             sql = sql.strip().rstrip(";")
             base_error_result = {
@@ -228,6 +229,7 @@ def _dashboard_index(
                 "extra_qs": extra_qs,
                 "error": None,
                 "templates": ["django_sql_dashboard/widgets/error.html"],
+                "query": query_object,
             }
             if parameter_error:
                 query_results.append(
@@ -263,9 +265,22 @@ def _dashboard_index(
                     columns = [c.name for c in cursor.description]
                     template_name = ("-".join(sorted(columns))) + ".html"
                     if len(template_name) < 255:
+                        try:
+                            get_template(
+                                "django_sql_dashboard/widgets/" + template_name
+                            )
+                            templates.insert(
+                                0,
+                                "django_sql_dashboard/widgets/" + template_name,
+                            )
+                        except (TemplateDoesNotExist, OSError):
+                            pass
+                    if query_object and query_object.template:
                         templates.insert(
                             0,
-                            "django_sql_dashboard/widgets/" + template_name,
+                            "django_sql_dashboard/widgets/"
+                            + query_object.template
+                            + ".html",
                         )
                     display_rows = displayable_rows(rows[:row_limit])
                     column_details = [
@@ -291,6 +306,7 @@ def _dashboard_index(
                             "extra_qs": extra_qs,
                             "duration_ms": duration_ms,
                             "templates": templates,
+                            "query": query_object,
                         }
                     )
                 finally:

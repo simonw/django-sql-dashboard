@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_export_requires_setting(admin_client, dashboard_db):
     for key in ("export_csv_0", "export_tsv_0"):
         response = admin_client.post(
@@ -62,3 +65,17 @@ def test_export_tsv(admin_client, dashboard_db, settings):
         'attachment; filename="select--hello--as-label'
     )
     assert content_disposition.endswith('.tsv"')
+
+
+@pytest.mark.parametrize("json_disabled", (False, True))
+def test_export_json(admin_client, saved_dashboard, settings, json_disabled):
+    if json_disabled:
+        settings.DASHBOARD_DISABLE_JSON = False
+
+    response = admin_client.get("/dashboard/test.json")
+    if json_disabled:
+        assert response.status_code == 403
+        return
+    assert response.status_code == 200
+    assert response["Content-Type"] == "application/json"
+    assert response.json() == {}

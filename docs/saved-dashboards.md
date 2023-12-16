@@ -33,3 +33,48 @@ The full list of edit policy options are:
 - `superuser`: Any user who is a superuser can edit
 
 Dashboards belong to the user who created them. Only Django super-users can re-assign ownership of dashboards to other users.
+
+## JSON export
+
+If your dashboard is called `/dashboards/demo/` you can add `.json` to get `/dashboards/demo.json` which will return a JSON representation of the dashboard.
+
+The JSON format looks something like this:
+
+```json
+{
+  "title": "Tag word cloud",
+  "queries": [
+    {
+      "sql": "select \"tag\" as wordcloud_word, count(*) as wordcloud_count from (select blog_tag.tag from blog_entry_tags join blog_tag on blog_entry_tags.tag_id = blog_tag.id\r\nunion all\r\nselect blog_tag.tag from blog_blogmark_tags join blog_tag on blog_blogmark_tags.tag_id = blog_tag.id\r\nunion all\r\nselect blog_tag.tag from blog_quotation_tags join blog_tag on blog_quotation_tags.tag_id = blog_tag.id) as results where tag != 'quora' group by \"tag\" order by wordcloud_count desc",
+      "rows": [
+        {
+          "wordcloud_word": "python",
+          "wordcloud_count": 826
+        },
+        {
+          "wordcloud_word": "javascript",
+          "wordcloud_count": 604
+        },
+        {
+          "wordcloud_word": "django",
+          "wordcloud_count": 529
+        },
+        {
+          "wordcloud_word": "security",
+          "wordcloud_count": 402
+        },
+        {
+          "wordcloud_word": "datasette",
+          "wordcloud_count": 331
+        },
+        {
+          "wordcloud_word": "projects",
+          "wordcloud_count": 282
+        }
+      ],
+    }
+  ]
+}
+```
+
+Set the `DASHBOARD_DISABLE_JSON` setting to `True` to disable this feature.

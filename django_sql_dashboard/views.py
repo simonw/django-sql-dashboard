@@ -13,6 +13,7 @@ from django.forms import CharField, ModelForm, Textarea
 from django.http.response import (
     HttpResponseForbidden,
     HttpResponseRedirect,
+    JsonResponse,
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
@@ -137,6 +138,7 @@ def _dashboard_index(
     too_long_so_use_post=False,
     template="django_sql_dashboard/dashboard.html",
     extra_context=None,
+    json_mode=False,
 ):
     query_results = []
     alias = getattr(settings, "DASHBOARD_DB_ALIAS", "dashboard")
@@ -329,6 +331,22 @@ def _dashboard_index(
             )
         ]
 
+    if json_mode:
+        return JsonResponse(
+            {
+                "title": title or "SQL Dashboard",
+                "queries": [
+                    {"sql": r["sql"], "rows": r["rows"]} for r in query_results
+                ],
+            },
+            json_dumps_params={
+                "indent": 2,
+                "default": lambda o: o.isoformat()
+                if hasattr(o, "isoformat")
+                else str(o),
+            },
+        )
+
     context = {
         "title": title or "SQL Dashboard",
         "html_title": html_title,
@@ -362,7 +380,14 @@ def _dashboard_index(
     return response
 
 
-def dashboard(request, slug):
+def dashboard_json(request, slug):
+    disable_json = getattr(settings, "DASHBOARD_DISABLE_JSON", None)
+    if disable_json:
+        return HttpResponseForbidden("JSON export is disabled")
+    return dashboard(request, slug, json_mode=True)
+
+
+def dashboard(request, slug, json_mode=False):
     dashboard = get_object_or_404(Dashboard, slug=slug)
     # Can current user see it, based on view_policy?
     view_policy = dashboard.view_policy
@@ -398,6 +423,7 @@ def dashboard(request, slug):
         description=dashboard.description,
         dashboard=dashboard,
         template="django_sql_dashboard/saved_dashboard.html",
+        json_mode=json_mode,
     )
 
 

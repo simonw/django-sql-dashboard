@@ -7,8 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
-        postgresql-version: [10, 11, 12, 13]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        postgresql-version: [12, 13, 14, 15, 16]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -39,6 +39,7 @@ jobs:
       run: |
         export POSTGRESQL_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/postgres"
         export INITDB_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb"
+        export PYTHONPATH="pytest_plugins:test_project"
         pytest
     - name: Check formatting
       run: black . --check

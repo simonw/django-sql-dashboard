@@ -1,5 +1,4 @@
 import os
-
 import pytest
 from dj_database_url import parse
 from django.conf import settings

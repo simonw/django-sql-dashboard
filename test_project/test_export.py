@@ -70,7 +70,7 @@ def test_export_tsv(admin_client, dashboard_db, settings):
 @pytest.mark.parametrize("json_disabled", (False, True))
 def test_export_json(admin_client, saved_dashboard, settings, json_disabled):
     if json_disabled:
-        settings.DASHBOARD_DISABLE_JSON = False
+        settings.DASHBOARD_DISABLE_JSON = True
 
     response = admin_client.get("/dashboard/test.json")
     if json_disabled:
@@ -78,4 +78,10 @@ def test_export_json(admin_client, saved_dashboard, settings, json_disabled):
         return
     assert response.status_code == 200
     assert response["Content-Type"] == "application/json"
-    assert response.json() == {}
+    assert response.json() == {
+        "title": "Test dashboard",
+        "queries": [
+            {"sql": "select 11 + 33", "rows": [{"?column?": 44}]},
+            {"sql": "select 22 + 55", "rows": [{"?column?": 77}]},
+        ],
+    }

@@ -41,6 +41,7 @@ jobs:
       run: |
         export POSTGRESQL_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/postgres"
         export INITDB_PATH="/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb"
+        export PYTHONPATH="pytest_plugins:test_project"
         pytest
   deploy:
     runs-on: ubuntu-latest

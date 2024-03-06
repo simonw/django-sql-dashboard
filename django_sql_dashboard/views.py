@@ -17,9 +17,6 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
-from django.utils.safestring import mark_safe
-
-from psycopg2.extensions import quote_ident
 
 from .models import Dashboard
 from .utils import (

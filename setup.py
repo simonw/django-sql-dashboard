@@ -37,11 +37,11 @@ setup(
             "templatetags/*.py",
         ]
     },
-    install_requires=["Django>=3.0", "markdown", "bleach"],
+    install_requires=["Django>=4.2", "markdown", "bleach"],
     extras_require={
         "test": [
             "black>=22.3.0",
-            "psycopg2",
+            "psycopg>=3.0",
             "pytest",
             "pytest-django==4.2.0",
             "pytest-pythonpath",
@@ -52,5 +52,5 @@ setup(
         ],
     },
     tests_require=["django-sql-dashboard[test]"],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 )

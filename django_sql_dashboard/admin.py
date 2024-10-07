@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from .models import Dashboard, DashboardQuery
 
 
-class DashboardQueryInline(admin.TabularInline):
+class DashboardQueryInline(admin.StackedInline):
     model = DashboardQuery
     extra = 1
 
@@ -16,10 +16,12 @@ class DashboardQueryInline(admin.TabularInline):
         return obj.user_can_edit(request.user)
 
     def get_readonly_fields(self, request, obj=None):
+        readonly_fields = ["created_at"]
         if not request.user.has_perm("django_sql_dashboard.execute_sql"):
-            return ("sql",)
-        else:
-            return tuple()
+            readonly_fields.extend(
+                ["sql", "title", "description", "settings", "template"]
+            )
+        return readonly_fields
 
 
 @admin.register(Dashboard)

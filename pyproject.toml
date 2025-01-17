@@ -7,4 +7,4 @@ multi_line_output = 3
 skip = '.git*'
 check-hidden = true
 # ignore-regex = ''
-# ignore-words-list = ''
+ignore-words-list = 'ths'

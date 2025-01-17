@@ -324,7 +324,7 @@ def test_user_can_edit(
         assert can_edit_using_admin == expected
         if can_edit_using_admin:
             # Check that they cannot edit the SQL queries, because they do not
-            # have the execute_sql permisssion
+            # have the execute_sql permission
             assert not user.has_perm("django_sql_dashboard.execute_sql")
             html = get_admin_change_form_html(client, user, dashboard_obj)
             soup = BeautifulSoup(html, "html5lib")

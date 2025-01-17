@@ -1,3 +1,10 @@
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git*'
+check-hidden = true
+# ignore-regex = ''
+ignore-words-list = 'ths'

@@ -43,7 +43,7 @@ setup(
             "black>=22.3.0",
             "psycopg2",
             "pytest",
-            "pytest-django==4.2.0",
+            "pytest-django>=4.11.1",
             "pytest-pythonpath",
             "dj-database-url",
             "testing.postgresql",
@@ -52,5 +52,5 @@ setup(
         ],
     },
     tests_require=["django-sql-dashboard[test]"],
-    python_requires=">=3.6",
+    python_requires=">=3.10",
 )

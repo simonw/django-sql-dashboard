@@ -341,9 +341,9 @@ def _dashboard_index(
             },
             json_dumps_params={
                 "indent": 2,
-                "default": lambda o: o.isoformat()
-                if hasattr(o, "isoformat")
-                else str(o),
+                "default": lambda o: (
+                    o.isoformat() if hasattr(o, "isoformat") else str(o)
+                ),
             },
         )
 

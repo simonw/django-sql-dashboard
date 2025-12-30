@@ -34,7 +34,7 @@ jobs:
         sudo apt-get -y install "postgresql-$POSTGRESQL_VERSION"
     - name: Install dependencies
       run: |
-        pip install -e '.[test]'
+        pip install -e . --group dev
     - name: Run tests
       env:
         POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}

@@ -4,8 +4,17 @@ from django.contrib.auth.models import Permission
 from django_sql_dashboard.models import Dashboard
 
 
+def pytest_collection_modifyitems(items):
+    """Add django_db marker with databases to tests that need database access."""
+    for item in items:
+        fixturenames = getattr(item, "fixturenames", ())
+        # Tests using client fixtures or dashboard_db need both databases
+        if any(f in fixturenames for f in ("admin_client", "client", "dashboard_db")):
+            item.add_marker(pytest.mark.django_db(databases=["default", "dashboard"]))
+
+
 @pytest.fixture
-def dashboard_db(settings, db):
+def dashboard_db(settings):
     settings.DATABASES["dashboard"]["OPTIONS"] = {
         "options": "-c default_transaction_read_only=on -c statement_timeout=100"
     }

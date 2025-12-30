@@ -1,35 +1,22 @@
 # Contributing
 
-To contribute to this library, first checkout the code. Then create a new virtual environment:
+To contribute to this library, first checkout the code. Use [uv](https://github.com/astral-sh/uv) to run the tests:
 
     cd django-sql-dashboard
-    python -m venv venv
-    source venv/bin/activate
-
-Or if you are using `pipenv`:
-
-    pipenv shell
-
-Now install the dependencies and tests:
-
-    pip install -e '.[test]'
-
-## Running the tests
-
-To run the tests:
-
-    pytest
+    uv run pytest
 
 ## Generating new migrations
 
 To generate migrations for model changes:
 
     cd test_project
-    ./manage.py makemigrations
+    uv run ./manage.py makemigrations
 
 ## Code style
 
-This library uses [Black](https://github.com/psf/black) for code formatting. The correct version of Black will be installed by `pip install -e '.[test]'` - you can run `black .` in the root directory to apply those formatting rules.
+This library uses [Black](https://github.com/psf/black) for code formatting. You can run it like this:
+
+    uv run black .
 
 ## Documentation
 
@@ -38,8 +25,7 @@ Documentation for this project uses [MyST](https://myst-parser.readthedocs.io/) 
 To build the documentation locally, run the following:
 
     cd docs
-    pip install -r requirements.txt
-    make livehtml
+    uv run --with-requirements requirements.txt make livehtml
 
 This will start a live preview server, using [sphinx-autobuild](https://pypi.org/project/sphinx-autobuild/).
 

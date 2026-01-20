@@ -13,7 +13,7 @@
   {% if result.truncated %}
     <p class="results-truncated">
       Results were truncated
-      {% if user_can_export_data and not saved_dashboard %}
+      {% if user_can_export_data %}
         <input
           class="btn"
           style="font-size: 0.6rem"
@@ -64,7 +64,7 @@
   </table>
   <details style="margin-top: 1em;"><summary style="font-size: 0.7em; margin-bottom: 0.5em; cursor: pointer;">Copy and export data</summary>
     <textarea id="copyable-{{ result.index }}" style="height: 10em">{{ result|sql_dashboard_tsv }}</textarea>
-    {% if user_can_export_data and not saved_dashboard %}
+    {% if user_can_export_data %}
       <div class="export-buttons">
         <input
           class="btn"
@@ -83,6 +83,44 @@
   </details>
   <p>Duration: {{ result.duration_ms|floatformat:2 }}ms</p>
   <!-- templates considered: {{ result.templates|join:", " }} -->
+
+  {% if saved_dashboard and user_can_export_data %}
+  {% comment %}
+    This is a bit of a hack to allow users with execute_sql permission to export
+    saved dashboards. We're essentially simulating a user who typed a SQL
+    query into the dashboard index page and decided to export it.
+  {% endcomment %}
+  <template id="export-template-{{ result.index}}">
+    <form action="{% url 'django_sql_dashboard-index' %}" method="POST" hidden>
+      {% csrf_token %}
+      <input type="hidden" name="sql" value="{{ result.sql }}">
+    </form>
+  </template>
+  <script>
+  (function() {
+    var exportButtons = document.querySelectorAll("input[name^=export_]");
+    var template = document.querySelector("#export-template-{{ result.index }}");
+    var formTemplate = template.content.querySelector('form');
+    Array.from(exportButtons).forEach(button => {
+      var exportType = button.name.match(/^export_(.+)_/)[1];
+
+      button.addEventListener("click", e => {
+        e.preventDefault();
+        var form = formTemplate.cloneNode(true);
+        var exportEl = document.createElement('input');
+        exportEl.type = "hidden";
+        exportEl.name = 'export_' + exportType + '_0';
+        exportEl.value = button.value;
+        form.appendChild(exportEl);
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+      });
+    });
+  })();
+  </script>
+  {% endif %}
+
   <script>
   (function() {
     var ta = document.querySelector("#copyable-{{ result.index }}");

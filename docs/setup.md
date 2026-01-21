@@ -6,12 +6,6 @@ Install this library using `pip`:
 
     $ pip install django-sql-dashboard
 
-### Run migrations
-
-The migrations create tables that store dashboards and queries:
-
-    $ ./manage.py migrate
-
 ## Configuration
 
 Add `"django_sql_dashboard"` to your `INSTALLED_APPS` in `settings.py`.
@@ -27,6 +21,12 @@ urlpatterns = [
     path("dashboard/", include(django_sql_dashboard.urls)),
 ]
 ```
+
+### Run migrations
+
+The migrations create tables that store dashboards and queries:
+
+    $ ./manage.py migrate
 
 ## Setting up read-only PostgreSQL credentials
 

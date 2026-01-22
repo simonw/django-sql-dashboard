@@ -16,10 +16,7 @@ from django.http.response import (
     JsonResponse,
     StreamingHttpResponse,
 )
-from django.shortcuts import get_object_or_404, render
-from django.utils.safestring import mark_safe
-
-from psycopg2.extensions import quote_ident
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Dashboard
 from .utils import (
@@ -392,7 +389,8 @@ def dashboard(request, slug, json_mode=False):
     # Can current user see it, based on view_policy?
     view_policy = dashboard.view_policy
     owner = dashboard.owned_by
-    denied = HttpResponseForbidden("You cannot access this dashboard")
+    login_url = f"/admin/login/?next={request.path}"
+    denied = redirect(login_url)
     denied["cache-control"] = "private"
     if view_policy == Dashboard.ViewPolicies.PRIVATE:
         if request.user != owner:

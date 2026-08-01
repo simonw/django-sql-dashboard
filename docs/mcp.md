@@ -32,11 +32,12 @@ Three read-only tools are exposed:
 
 The MCP endpoint applies the same rules as the rest of the dashboard:
 
-- The request must come from a logged-in user with the
+- The request must be authenticated as a user with the
   `django_sql_dashboard.execute_sql` permission. Unauthenticated requests
   receive a 401 response; authenticated users without the permission
-  receive a 403 response. MCP clients need to authenticate in the same way
-  as the user's browser, for example by passing a valid session cookie.
+  receive a 403 response. MCP clients can authenticate in the same way
+  as the user's browser, for example by passing a valid session cookie,
+  or using a token - see below.
 - SQL executes against the `DASHBOARD_DB_ALIAS` database connection, inside
   a transaction that is always rolled back, using the same protective
   pattern as the dashboard itself.
@@ -48,3 +49,30 @@ database connection to use a read-only PostgreSQL role with a statement
 timeout - see [Security](security.md) for details. The MCP server deliberately
 provides no way to run write queries, but the read-only database role is the
 real enforcement mechanism.
+
+## Token authentication
+
+Headless MCP clients usually cannot log in through a browser to obtain a
+session cookie. To support them, the optional `DASHBOARD_MCP_TOKENS` setting
+maps secret tokens to usernames:
+
+```python
+DASHBOARD_MCP_TOKENS = {
+    "your-secret-token": "username",
+}
+```
+
+An MCP client can then authenticate by sending that token in an
+`Authorization` header:
+
+    Authorization: Bearer your-secret-token
+
+A request with a valid token is treated as coming from the corresponding
+user, who must still have the `django_sql_dashboard.execute_sql` permission.
+Tokens for missing or inactive users are rejected, and if a `Bearer` header
+is present it must be valid - an invalid token is never ignored in favor of
+the request's session cookie.
+
+Treat these tokens like passwords: each one grants the full dashboard SQL
+access of its user. Keep them out of source control (for example by loading
+them from environment variables) and rotate them by changing the setting.

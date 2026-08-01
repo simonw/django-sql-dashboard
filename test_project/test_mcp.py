@@ -30,12 +30,15 @@ def read_only_dashboard_db(writable_dashboard_db):
     options.pop("options", None)
 
 
-def rpc(client, method, params=None, id=1):
+def rpc(client, method, params=None, id=1, headers=None):
     message = {"jsonrpc": "2.0", "id": id, "method": method}
     if params is not None:
         message["params"] = params
     return client.post(
-        MCP_PATH, data=json.dumps(message), content_type="application/json"
+        MCP_PATH,
+        data=json.dumps(message),
+        content_type="application/json",
+        headers=headers,
     )
 
 
@@ -61,6 +64,82 @@ def test_mcp_requires_execute_sql_permission(
     user = django_user_model.objects.get(pk=user.pk)  # to clear permission cache
     client.force_login(user)
     assert rpc(client, "tools/list").status_code == 200
+
+
+def test_mcp_token_authentication(
+    client, dashboard_db, settings, django_user_model, execute_sql_permission
+):
+    user = django_user_model.objects.create(username="token_user")
+    user.user_permissions.add(execute_sql_permission)
+    settings.DASHBOARD_MCP_TOKENS = {"correct-token": "token_user"}
+    headers = {"authorization": "Bearer correct-token"}
+    response = rpc(client, "tools/list", headers=headers)
+    assert response.status_code == 200
+    # And SQL can be executed
+    response = rpc(
+        client,
+        "tools/call",
+        {"name": "execute_sql", "arguments": {"sql": "select 1 as one"}},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["result"]["structuredContent"]["rows"] == [[1]]
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    (
+        "Bearer wrong-token",
+        "Bearer ",
+        "Bearer correct-token-with-suffix",
+    ),
+)
+def test_mcp_token_invalid_tokens_are_rejected(
+    client, dashboard_db, settings, django_user_model, authorization
+):
+    django_user_model.objects.create(username="token_user")
+    settings.DASHBOARD_MCP_TOKENS = {"correct-token": "token_user"}
+    response = rpc(client, "tools/list", headers={"authorization": authorization})
+    assert response.status_code == 401
+
+
+def test_mcp_token_for_missing_user_is_rejected(client, dashboard_db, settings):
+    settings.DASHBOARD_MCP_TOKENS = {"correct-token": "no_such_user"}
+    response = rpc(
+        client, "tools/list", headers={"authorization": "Bearer correct-token"}
+    )
+    assert response.status_code == 401
+
+
+def test_mcp_token_for_inactive_user_is_rejected(
+    client, dashboard_db, settings, django_user_model, execute_sql_permission
+):
+    user = django_user_model.objects.create(username="inactive_user", is_active=False)
+    user.user_permissions.add(execute_sql_permission)
+    settings.DASHBOARD_MCP_TOKENS = {"correct-token": "inactive_user"}
+    response = rpc(
+        client, "tools/list", headers={"authorization": "Bearer correct-token"}
+    )
+    assert response.status_code == 401
+
+
+def test_mcp_token_user_still_needs_execute_sql_permission(
+    client, dashboard_db, settings, django_user_model
+):
+    django_user_model.objects.create(username="powerless_user")
+    settings.DASHBOARD_MCP_TOKENS = {"correct-token": "powerless_user"}
+    response = rpc(
+        client, "tools/list", headers={"authorization": "Bearer correct-token"}
+    )
+    assert response.status_code == 403
+
+
+def test_mcp_bearer_header_does_not_fall_back_to_session(admin_client, dashboard_db):
+    # A logged-in session with an invalid Bearer token is still rejected
+    response = rpc(
+        admin_client, "tools/list", headers={"authorization": "Bearer wrong-token"}
+    )
+    assert response.status_code == 401
 
 
 def test_mcp_is_csrf_exempt(admin_client, dashboard_db, admin_user):

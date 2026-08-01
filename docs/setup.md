@@ -152,6 +152,7 @@ You can customize the following settings in Django's `settings.py` module:
 - `DASHBOARD_UPGRADE_OLD_BASE64_LINKS` - prior to version 0.8a0 SQL URLs used base64-encoded JSON. If you set this to `True` any hits that include those old URLs will be automatically redirected to the upgraded new version. Use this if you have an existing installation of `django-sql-dashboard` that people already have saved bookmarks for.
 - `DASHBOARD_ENABLE_FULL_EXPORT` - set this to `True` to enable the full results CSV/TSV export feature. It defaults to `False`. Enable this feature only if you are confident that the database alias you are using does not have write permissions to anything.
 - `DASHBOARD_DISABLE_JSON` - set to `True` to disable the feature where `/dashboard/name-of-dashboard.json` provides a JSON representation of the dashboard. This defaults to `False`.
+- `DASHBOARD_MCP_TOKENS` - a dictionary mapping secret tokens to usernames, used to authenticate MCP clients that cannot use a session cookie. See [MCP server](mcp.md).
 
 ## Custom templates
 

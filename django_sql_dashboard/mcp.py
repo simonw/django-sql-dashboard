@@ -19,8 +19,10 @@ Inspired by https://github.com/datasette/datasette-mcp
 """
 
 import json
+import secrets
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import connections
 from django.db.utils import ProgrammingError
 from django.http import HttpResponse, JsonResponse
@@ -293,11 +295,45 @@ METHODS = {
 }
 
 
+def _user_for_bearer_token(token):
+    # Returns the user for a DASHBOARD_MCP_TOKENS token, or None
+    tokens = getattr(settings, "DASHBOARD_MCP_TOKENS", None) or {}
+    username = None
+    for configured_token, configured_username in tokens.items():
+        # compare_digest to avoid leaking token prefixes via timing
+        if secrets.compare_digest(str(configured_token), token):
+            username = configured_username
+    if username is None:
+        return None
+    UserModel = get_user_model()
+    try:
+        user = UserModel._default_manager.get_by_natural_key(username)
+    except UserModel.DoesNotExist:
+        return None
+    if not user.is_active:
+        return None
+    return user
+
+
+def _authenticate(request):
+    # Returns (user, error_response) - exactly one is not None
+    authorization = request.headers.get("Authorization", "")
+    if authorization.startswith("Bearer "):
+        user = _user_for_bearer_token(authorization[len("Bearer ") :].strip())
+        if user is None:
+            return None, JsonResponse({"error": "Invalid token"}, status=401)
+        return user, None
+    if request.user.is_authenticated:
+        return request.user, None
+    return None, JsonResponse({"error": "Authentication required"}, status=401)
+
+
 @csrf_exempt
 def mcp_endpoint(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
-    if not request.user.has_perm("django_sql_dashboard.execute_sql"):
+    user, error_response = _authenticate(request)
+    if error_response is not None:
+        return error_response
+    if not user.has_perm("django_sql_dashboard.execute_sql"):
         return JsonResponse(
             {"error": "You do not have permission to execute SQL"}, status=403
         )

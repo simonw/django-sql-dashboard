@@ -10,12 +10,10 @@ from django_sql_dashboard.utils import unsign_sql
 def test_default_widget(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",
-        {
-            "sql": """
+        {"sql": """
             SELECT * FROM (
                 VALUES (1, 'one', 4.5), (2, 'two', 3.6), (3, 'three', 4.1)
-            ) AS t (id, name, size)"""
-        },
+            ) AS t (id, name, size)"""},
         follow=True,
     )
     html = response.content.decode("utf-8")
@@ -34,11 +32,9 @@ def test_default_widget(admin_client, dashboard_db):
 def test_default_widget_pretty_prints_json(admin_client, dashboard_db):
     response = admin_client.post(
         "/dashboard/",
-        {
-            "sql": """
+        {"sql": """
             select json_build_object('hello', json_build_array(1, 2, 3)) as json
-            """
-        },
+            """},
         follow=True,
     )
     html = response.content.decode("utf-8")

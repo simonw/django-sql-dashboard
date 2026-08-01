@@ -7,6 +7,9 @@ from django_sql_dashboard.models import Dashboard
 def pytest_collection_modifyitems(items):
     """Add django_db marker with databases to tests that need database access."""
     for item in items:
+        if item.get_closest_marker("django_db") is not None:
+            # Test has its own explicit marker
+            continue
         fixturenames = getattr(item, "fixturenames", ())
         # Tests using client fixtures or dashboard_db need both databases
         if any(f in fixturenames for f in ("admin_client", "client", "dashboard_db")):

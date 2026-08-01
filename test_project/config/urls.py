@@ -4,7 +4,6 @@ from django.views.generic.base import RedirectView
 
 import django_sql_dashboard
 
-
 urlpatterns = [
     path("dashboard/", include(django_sql_dashboard.urls)),
     path("admin/", admin.site.urls),

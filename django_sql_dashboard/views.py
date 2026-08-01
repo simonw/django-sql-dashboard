@@ -146,8 +146,7 @@ def _dashboard_index(
     connection = connections[alias]
     reserved_words = postgresql_reserved_words(connection)
     with connection.cursor() as tables_cursor:
-        tables_cursor.execute(
-            """
+        tables_cursor.execute("""
             with visible_tables as (
               select table_name
                 from information_schema.tables
@@ -173,8 +172,7 @@ def _dashboard_index(
               information_schema.columns.table_name
             order by
               information_schema.columns.table_name
-        """
-        )
+        """)
         fetched = tables_cursor.fetchall()
         available_tables = [
             {

@@ -9,6 +9,7 @@ setup
 sql
 saved-dashboards
 widgets
+mcp
 security
 contributing
 ```

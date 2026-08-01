@@ -3,17 +3,22 @@ A Model Context Protocol (MCP) server for django-sql-dashboard.
 
 This implements the stateless variant of the MCP Streamable HTTP transport
 as a single Django view, without any additional dependencies. It exposes
-three read-only tools:
+five read-only tools:
 
 - list_tables - list the tables visible to the dashboard connection
 - get_schema - return the schema (tables, columns, types) for the database
 - execute_sql - execute one read-only SQL query and return its results
+- list_dashboards - list saved dashboards visible to the current user
+- execute_dashboard - execute the queries saved on a dashboard
 
 SQL execution uses the same protected path as the dashboard views: the
 read-only "dashboard" database alias, a transaction that is rolled back,
 the ``DASHBOARD_ROW_LIMIT`` row limit and the same named parameter support.
-Callers must be authenticated and have the
-``django_sql_dashboard.execute_sql`` permission.
+The first three tools require an authenticated user with the
+``django_sql_dashboard.execute_sql`` permission. The dashboard tools follow
+each dashboard's view policy instead, so anonymous MCP clients with no
+credentials can list and execute public dashboards, and can execute
+unlisted dashboards if they know the slug.
 
 Inspired by https://github.com/datasette/datasette-mcp
 """
@@ -28,6 +33,7 @@ from django.db.utils import ProgrammingError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from .models import Dashboard
 from .utils import displayable_rows, extract_named_parameters
 
 MCP_PROTOCOL_VERSION = "2025-06-18"
@@ -38,9 +44,13 @@ SERVER_INFO = {
 }
 
 SERVER_INSTRUCTIONS = (
-    "Call list_tables, then get_schema to see columns and types, "
-    "then execute_sql to answer questions using read-only PostgreSQL."
+    "Call list_dashboards to see saved dashboards and execute_dashboard to "
+    "run one. If the SQL tools are available, call list_tables, then "
+    "get_schema to see columns and types, then execute_sql to answer "
+    "questions using read-only PostgreSQL."
 )
+
+PERMISSION_DENIED_ERROR = "You do not have permission to execute SQL"
 
 TABLES_AND_COLUMNS_SQL = """
 select
@@ -82,11 +92,11 @@ def _tables_and_columns():
     return tables
 
 
-def tool_list_tables():
+def tool_list_tables(user):
     return {"tables": [table for table, _ in _tables_and_columns()]}
 
 
-def tool_get_schema():
+def tool_get_schema(user):
     blocks = []
     for table, columns in _tables_and_columns():
         column_lines = ",\n".join(
@@ -106,7 +116,7 @@ def _serialize_cell(value):
     return str(value)
 
 
-def tool_execute_sql(sql, parameters=None):
+def _execute_query(sql, parameters=None):
     sql = sql.strip().rstrip(";")
     if not sql:
         raise ToolError("SQL query is required")
@@ -149,11 +159,59 @@ def tool_execute_sql(sql, parameters=None):
     }
 
 
+def tool_execute_sql(user, sql, parameters=None):
+    return _execute_query(sql, parameters)
+
+
+def tool_list_dashboards(user):
+    if user.is_authenticated:
+        dashboards = Dashboard.get_visible_to_user(user)
+    else:
+        dashboards = Dashboard.objects.filter(
+            view_policy=Dashboard.ViewPolicies.PUBLIC
+        ).order_by("slug")
+    return {
+        "dashboards": [
+            {
+                "slug": dashboard.slug,
+                "title": dashboard.title,
+                "description": dashboard.description,
+            }
+            for dashboard in dashboards
+        ]
+    }
+
+
+def tool_execute_dashboard(user, slug, parameters=None):
+    try:
+        dashboard = Dashboard.objects.get(slug=slug)
+    except Dashboard.DoesNotExist:
+        dashboard = None
+    if dashboard is None or not dashboard.user_can_view(user):
+        raise ToolError(
+            "Dashboard '{}' does not exist or is not available".format(slug)
+        )
+    queries = []
+    for query in dashboard.queries.all():
+        try:
+            result = _execute_query(query.sql, parameters)
+        except ToolError as e:
+            result = {"error": str(e)}
+        queries.append(dict({"sql": query.sql}, **result))
+    return {
+        "slug": dashboard.slug,
+        "title": dashboard.title,
+        "description": dashboard.description,
+        "queries": queries,
+    }
+
+
 TOOLS = [
     {
         "name": "list_tables",
         "description": "List the tables available to SQL queries in this dashboard.",
         "handler": tool_list_tables,
+        "requires_execute_sql": True,
         "inputSchema": {
             "type": "object",
             "properties": {},
@@ -175,6 +233,7 @@ TOOLS = [
             "constructing a SQL query."
         ),
         "handler": tool_get_schema,
+        "requires_execute_sql": True,
         "inputSchema": {
             "type": "object",
             "properties": {},
@@ -197,6 +256,7 @@ TOOLS = [
             "not allowed. Results are truncated to the dashboard row limit."
         ),
         "handler": tool_execute_sql,
+        "requires_execute_sql": True,
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -225,6 +285,95 @@ TOOLS = [
             "required": ["columns", "rows", "truncated"],
         },
     },
+    {
+        "name": "list_dashboards",
+        "description": (
+            "List the saved dashboards that are visible to the current user. "
+            "Unlisted dashboards are not included, but can still be executed "
+            "by slug with execute_dashboard."
+        ),
+        "handler": tool_list_dashboards,
+        "requires_execute_sql": False,
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "dashboards": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "slug": {"type": "string"},
+                            "title": {"type": "string"},
+                            "description": {"type": "string"},
+                        },
+                        "required": ["slug", "title", "description"],
+                    },
+                },
+            },
+            "required": ["dashboards"],
+        },
+    },
+    {
+        "name": "execute_dashboard",
+        "description": (
+            "Execute every SQL query saved on a dashboard and return their "
+            "results. Use the slug from list_dashboards, or a known slug for "
+            "an unlisted dashboard. Pass values for any %(name)s parameters "
+            "used by the dashboard's queries in the parameters argument."
+        ),
+        "handler": tool_execute_dashboard,
+        "requires_execute_sql": False,
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "slug": {
+                    "type": "string",
+                    "description": "The slug identifying the dashboard",
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": (
+                        "Values for any %(name)s parameters used by the "
+                        "dashboard's queries"
+                    ),
+                    "additionalProperties": {"type": "string"},
+                },
+            },
+            "required": ["slug"],
+            "additionalProperties": False,
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "slug": {"type": "string"},
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "queries": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "sql": {"type": "string"},
+                            "columns": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "rows": {"type": "array", "items": {"type": "array"}},
+                            "truncated": {"type": "boolean"},
+                            "error": {"type": "string"},
+                        },
+                        "required": ["sql"],
+                    },
+                },
+            },
+            "required": ["slug", "title", "description", "queries"],
+        },
+    },
 ]
 
 TOOLS_BY_NAME = {tool["name"]: tool for tool in TOOLS}
@@ -241,7 +390,7 @@ def _jsonrpc_error(id, code, message, status=200):
     )
 
 
-def _handle_initialize(params):
+def _handle_initialize(user, params):
     return {
         "protocolVersion": MCP_PROTOCOL_VERSION,
         "capabilities": {"tools": {}},
@@ -250,7 +399,14 @@ def _handle_initialize(params):
     }
 
 
-def _handle_tools_list(params):
+def _available_tools(user):
+    can_execute_sql = user.has_perm("django_sql_dashboard.execute_sql")
+    return [
+        tool for tool in TOOLS if can_execute_sql or not tool["requires_execute_sql"]
+    ]
+
+
+def _handle_tools_list(user, params):
     return {
         "tools": [
             {
@@ -260,19 +416,23 @@ def _handle_tools_list(params):
                 "outputSchema": tool["outputSchema"],
                 "annotations": {"readOnlyHint": True, "openWorldHint": False},
             }
-            for tool in TOOLS
+            for tool in _available_tools(user)
         ]
     }
 
 
-def _handle_tools_call(params):
+def _handle_tools_call(user, params):
     name = params.get("name")
     tool = TOOLS_BY_NAME.get(name)
     if tool is None:
         raise KeyError("Unknown tool: {}".format(name))
     arguments = params.get("arguments") or {}
     try:
-        structured = tool["handler"](**arguments)
+        if tool["requires_execute_sql"] and not user.has_perm(
+            "django_sql_dashboard.execute_sql"
+        ):
+            raise ToolError(PERMISSION_DENIED_ERROR)
+        structured = tool["handler"](user, **arguments)
     except ToolError as e:
         return {
             "content": [{"type": "text", "text": str(e)}],
@@ -289,7 +449,7 @@ def _handle_tools_call(params):
 
 METHODS = {
     "initialize": _handle_initialize,
-    "ping": lambda params: {},
+    "ping": lambda user, params: {},
     "tools/list": _handle_tools_list,
     "tools/call": _handle_tools_call,
 }
@@ -316,16 +476,15 @@ def _user_for_bearer_token(token):
 
 
 def _authenticate(request):
-    # Returns (user, error_response) - exactly one is not None
+    # Returns (user, error_response) - exactly one is not None. The user
+    # may be anonymous: public dashboards work with no credentials at all.
     authorization = request.headers.get("Authorization", "")
     if authorization.startswith("Bearer "):
         user = _user_for_bearer_token(authorization[len("Bearer ") :].strip())
         if user is None:
             return None, JsonResponse({"error": "Invalid token"}, status=401)
         return user, None
-    if request.user.is_authenticated:
-        return request.user, None
-    return None, JsonResponse({"error": "Authentication required"}, status=401)
+    return request.user, None
 
 
 @csrf_exempt
@@ -333,10 +492,6 @@ def mcp_endpoint(request):
     user, error_response = _authenticate(request)
     if error_response is not None:
         return error_response
-    if not user.has_perm("django_sql_dashboard.execute_sql"):
-        return JsonResponse(
-            {"error": "You do not have permission to execute SQL"}, status=403
-        )
     if request.method != "POST":
         response = JsonResponse({"error": "Method not allowed"}, status=405)
         response["Allow"] = "POST"
@@ -356,7 +511,7 @@ def mcp_endpoint(request):
     if handler is None:
         return _jsonrpc_error(id, -32601, "Method not found: {}".format(method))
     try:
-        result = handler(message.get("params") or {})
+        result = handler(user, message.get("params") or {})
     except (TypeError, KeyError) as e:
         return _jsonrpc_error(id, -32602, "Invalid params: {}".format(e))
     return _jsonrpc_response(id, result)

@@ -84,6 +84,26 @@ class Dashboard(models.Model):
     class Meta:
         permissions = [("execute_sql", "Can execute arbitrary SQL queries")]
 
+    def user_can_view(self, user):
+        policy = self.view_policy
+        if policy in (self.ViewPolicies.PUBLIC, self.ViewPolicies.UNLISTED):
+            return True
+        if policy == self.ViewPolicies.PRIVATE:
+            return user == self.owned_by
+        if not user.is_authenticated:
+            return False
+        if user == self.owned_by:
+            return True
+        if policy == self.ViewPolicies.LOGGEDIN:
+            return True
+        if policy == self.ViewPolicies.GROUP:
+            return user.groups.filter(pk=self.view_group_id).exists()
+        if policy == self.ViewPolicies.STAFF:
+            return user.is_staff
+        if policy == self.ViewPolicies.SUPERUSER:
+            return user.is_superuser
+        return False
+
     def user_can_edit(self, user):
         if not user:
             return False

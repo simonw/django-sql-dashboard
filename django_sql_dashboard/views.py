@@ -390,32 +390,10 @@ def dashboard_json(request, slug):
 def dashboard(request, slug, json_mode=False):
     dashboard = get_object_or_404(Dashboard, slug=slug)
     # Can current user see it, based on view_policy?
-    view_policy = dashboard.view_policy
-    owner = dashboard.owned_by
-    denied = HttpResponseForbidden("You cannot access this dashboard")
-    denied["cache-control"] = "private"
-    if view_policy == Dashboard.ViewPolicies.PRIVATE:
-        if request.user != owner:
-            return denied
-    elif view_policy == Dashboard.ViewPolicies.LOGGEDIN:
-        if not request.user.is_authenticated:
-            return denied
-    elif view_policy == Dashboard.ViewPolicies.GROUP:
-        if (not request.user.is_authenticated) or not (
-            request.user == owner
-            or request.user.groups.filter(pk=dashboard.view_group_id).exists()
-        ):
-            return denied
-    elif view_policy == Dashboard.ViewPolicies.STAFF:
-        if (not request.user.is_authenticated) or (
-            request.user != owner and not request.user.is_staff
-        ):
-            return denied
-    elif view_policy == Dashboard.ViewPolicies.SUPERUSER:
-        if (not request.user.is_authenticated) or (
-            request.user != owner and not request.user.is_superuser
-        ):
-            return denied
+    if not dashboard.user_can_view(request.user):
+        denied = HttpResponseForbidden("You cannot access this dashboard")
+        denied["cache-control"] = "private"
+        return denied
     return _dashboard_index(
         request,
         sql_queries=[query.sql for query in dashboard.queries.all()],

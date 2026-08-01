@@ -4,6 +4,8 @@ import pytest
 from django.db import connections
 from django.test.client import Client
 
+from django_sql_dashboard.models import Dashboard
+
 MCP_PATH = "/dashboard/-/mcp"
 
 
@@ -48,22 +50,38 @@ def call_tool(client, name, arguments=None):
     return response.json()["result"]
 
 
-def test_mcp_requires_authentication(client, dashboard_db):
+def tool_names(client):
     response = rpc(client, "tools/list")
-    assert response.status_code == 401
+    assert response.status_code == 200
+    return [tool["name"] for tool in response.json()["result"]["tools"]]
 
 
-def test_mcp_requires_execute_sql_permission(
+def test_anonymous_clients_only_see_dashboard_tools(client, dashboard_db):
+    assert tool_names(client) == ["list_dashboards", "execute_dashboard"]
+
+
+def test_sql_tools_require_execute_sql_permission(
     client, dashboard_db, django_user_model, execute_sql_permission
 ):
     user = django_user_model.objects.create(username="mcp_user")
     client.force_login(user)
-    assert rpc(client, "tools/list").status_code == 403
+    # Without the permission: dashboard tools only, SQL calls are refused
+    assert tool_names(client) == ["list_dashboards", "execute_dashboard"]
+    result = call_tool(client, "execute_sql", {"sql": "select 1"})
+    assert result["isError"] is True
+    assert "You do not have permission to execute SQL" in result["content"][0]["text"]
     # Now grant the permission
     user.user_permissions.add(execute_sql_permission)
-    user = django_user_model.objects.get(pk=user.pk)  # to clear permission cache
     client.force_login(user)
-    assert rpc(client, "tools/list").status_code == 200
+    assert tool_names(client) == [
+        "list_tables",
+        "get_schema",
+        "execute_sql",
+        "list_dashboards",
+        "execute_dashboard",
+    ]
+    result = call_tool(client, "execute_sql", {"sql": "select 1 as one"})
+    assert result["structuredContent"]["rows"] == [[1]]
 
 
 def test_mcp_token_authentication(
@@ -128,10 +146,17 @@ def test_mcp_token_user_still_needs_execute_sql_permission(
 ):
     django_user_model.objects.create(username="powerless_user")
     settings.DASHBOARD_MCP_TOKENS = {"correct-token": "powerless_user"}
+    headers = {"authorization": "Bearer correct-token"}
     response = rpc(
-        client, "tools/list", headers={"authorization": "Bearer correct-token"}
+        client,
+        "tools/call",
+        {"name": "execute_sql", "arguments": {"sql": "select 1"}},
+        headers=headers,
     )
-    assert response.status_code == 403
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert result["isError"] is True
+    assert "You do not have permission to execute SQL" in result["content"][0]["text"]
 
 
 def test_mcp_bearer_header_does_not_fall_back_to_session(admin_client, dashboard_db):
@@ -196,6 +221,8 @@ def test_tools_list(admin_client, dashboard_db):
         "list_tables",
         "get_schema",
         "execute_sql",
+        "list_dashboards",
+        "execute_dashboard",
     ]
     for tool in tools:
         assert tool["description"]
@@ -294,8 +321,6 @@ def test_execute_sql_rejects_writes_on_read_only_connection(
 def test_execute_sql_writes_are_rolled_back(admin_client, writable_dashboard_db):
     # Even without a read-only connection, the wrapping transaction is
     # always rolled back so writes never stick
-    from django_sql_dashboard.models import Dashboard
-
     Dashboard.objects.create(slug="rollback-test")
     count_sql = "select count(*) from django_sql_dashboard_dashboard"
     result = call_tool(admin_client, "execute_sql", {"sql": count_sql})
@@ -314,3 +339,122 @@ def test_unknown_tool_returns_invalid_params(admin_client, dashboard_db):
     response = rpc(admin_client, "tools/call", {"name": "drop_tables", "arguments": {}})
     assert response.status_code == 200
     assert response.json()["error"]["code"] == -32602
+
+
+def test_list_dashboards_anonymous_sees_only_public(client, dashboard_db):
+    Dashboard.objects.create(slug="public-one", title="Public", view_policy="public")
+    Dashboard.objects.create(slug="secret", view_policy="unlisted")
+    Dashboard.objects.create(slug="private-one", view_policy="private")
+    Dashboard.objects.create(slug="members", view_policy="loggedin")
+    result = call_tool(client, "list_dashboards")
+    assert result["isError"] is False
+    assert result["structuredContent"] == {
+        "dashboards": [
+            {"slug": "public-one", "title": "Public", "description": ""},
+        ]
+    }
+
+
+def test_list_dashboards_logged_in(client, dashboard_db, django_user_model):
+    user = django_user_model.objects.create(username="viewer")
+    Dashboard.objects.create(slug="public-one", view_policy="public")
+    Dashboard.objects.create(slug="members", view_policy="loggedin")
+    Dashboard.objects.create(slug="secret", view_policy="unlisted")
+    Dashboard.objects.create(slug="mine", view_policy="private", owned_by=user)
+    client.force_login(user)
+    result = call_tool(client, "list_dashboards")
+    slugs = [d["slug"] for d in result["structuredContent"]["dashboards"]]
+    # Visible: loggedin, public and their own private - but never unlisted
+    assert sorted(slugs) == ["members", "mine", "public-one"]
+
+
+def test_execute_dashboard_anonymous_public(client, dashboard_db, saved_dashboard):
+    result = call_tool(client, "execute_dashboard", {"slug": "test"})
+    assert result["isError"] is False
+    assert result["structuredContent"] == {
+        "slug": "test",
+        "title": "Test dashboard",
+        "description": "This [supports markdown](http://example.com/)",
+        "queries": [
+            {
+                "sql": "select 11 + 33",
+                "columns": ["?column?"],
+                "rows": [[44]],
+                "truncated": False,
+            },
+            {
+                "sql": "select 22 + 55",
+                "columns": ["?column?"],
+                "rows": [[77]],
+                "truncated": False,
+            },
+        ],
+    }
+
+
+def test_execute_dashboard_unlisted_works_by_slug(client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="secret", view_policy="unlisted")
+    dashboard.queries.create(sql="select 1 as one")
+    result = call_tool(client, "execute_dashboard", {"slug": "secret"})
+    assert result["isError"] is False
+    assert result["structuredContent"]["queries"][0]["rows"] == [[1]]
+
+
+@pytest.mark.parametrize("slug", ("no-such-dashboard", "private-one", "members"))
+def test_execute_dashboard_unavailable_dashboards_are_not_disclosed(
+    client, dashboard_db, slug
+):
+    Dashboard.objects.create(slug="private-one", view_policy="private")
+    Dashboard.objects.create(slug="members", view_policy="loggedin")
+    result = call_tool(client, "execute_dashboard", {"slug": slug})
+    assert result["isError"] is True
+    assert (
+        "Dashboard '{}' does not exist or is not available".format(slug)
+        in result["content"][0]["text"]
+    )
+
+
+def test_execute_dashboard_owner_can_execute_private(
+    client, dashboard_db, django_user_model
+):
+    user = django_user_model.objects.create(username="owner")
+    dashboard = Dashboard.objects.create(
+        slug="private-one", view_policy="private", owned_by=user
+    )
+    dashboard.queries.create(sql="select 1 as one")
+    client.force_login(user)
+    result = call_tool(client, "execute_dashboard", {"slug": "private-one"})
+    assert result["isError"] is False
+    assert result["structuredContent"]["queries"][0]["rows"] == [[1]]
+
+
+def test_execute_dashboard_with_parameters(client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="params", view_policy="public")
+    dashboard.queries.create(sql="select %(name)s as name")
+    result = call_tool(
+        client,
+        "execute_dashboard",
+        {"slug": "params", "parameters": {"name": "Cleo"}},
+    )
+    assert result["structuredContent"]["queries"][0]["rows"] == [["Cleo"]]
+
+
+def test_execute_dashboard_reports_per_query_errors(client, dashboard_db):
+    dashboard = Dashboard.objects.create(slug="mixed", view_policy="public")
+    dashboard.queries.create(sql="select * from no_such_table")
+    dashboard.queries.create(sql="select 1 as one")
+    result = call_tool(client, "execute_dashboard", {"slug": "mixed"})
+    assert result["isError"] is False
+    queries = result["structuredContent"]["queries"]
+    assert 'relation "no_such_table" does not exist' in queries[0]["error"]
+    assert queries[1]["rows"] == [[1]]
+
+
+def test_execute_dashboard_does_not_require_execute_sql_permission(
+    client, dashboard_db, django_user_model, saved_dashboard
+):
+    user = django_user_model.objects.create(username="powerless_viewer")
+    client.force_login(user)
+    result = call_tool(client, "execute_dashboard", {"slug": "test"})
+    assert result["isError"] is False
+    assert result["structuredContent"]["queries"][0]["rows"] == [[44]]
